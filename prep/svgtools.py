@@ -4,8 +4,10 @@ from numpy.random import choice
 from PIL import Image
 import pandas
 import numpy
+import json
 import os
 
+# svg functions 
 def get_coordinates(png_image,transparent_filter=True,white_filter=True,sample_rate=2):
     """get_coordinates: reads in a png image, and returns xy coordinates of non transparent pixels 
     :param png_image: the image to read
@@ -148,3 +150,20 @@ def get_svg_base(uid,width=700,height=1000):
    />
   </g>
 </svg>''' %(width,height,uid)
+
+# utils 
+def read_json(json_file):
+    '''read_json reads in a json structure, corresponding to different regions to annotate
+    :param json_file: path to json_file
+    '''
+    return json.load(open(json_file,'r'),encoding="utf-8")
+
+# generate annotator
+def generate_annotator(svg_file,labels):
+    '''generate_annotator will return a static web page to allow for annotation of an svg image with some set of labels.
+    :param svg_file: full path to svg file to annotate
+    :param labels: list of labels to provide to user
+    '''
+    template = "\n".join(open("data/annotator.html","r").readlines())
+    svg = "\n".join(open(svg_file,"r").readlines())
+    

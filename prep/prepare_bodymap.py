@@ -11,6 +11,11 @@ create_pointilism_svg(png_image,uid_base="bodymap",
                                 sample_rate=2,width=330,height=800
                                 output_file="data/bodymap.svg"):
 
+# Now prepare for annotation of yaml_file
+# (can I do this without a server?)
+yaml_file="data/simpleFMA.yml"
+
+
 # Anatomical entities, Foundational Model of Anatomy
 fma = pandas.read_csv("data/FMA.csv",sep=",",low_memory=False)
 
