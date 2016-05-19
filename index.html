@@ -1771,8 +1771,10 @@ function highlight(ids) {
   .style("fill","orange")
   .classed("highlight",true)
 
-  // Allow for annotation
-  $("#annotate_button").removeClass("disabled")
+  // Allow for annotation if there is a selection
+  if ($(".highlight").length > 0){
+      $("#annotate_button").removeClass("disabled")
+  }
 
 }
 
