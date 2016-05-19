@@ -1,0 +1,253 @@
+<!doctype html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <style type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+    <style type="text/css">
+      body {
+        font-family: 'Roboto', sans-serif;
+      }
+      #menu {
+        background-color: #F7F7F7;
+        padding:20px;
+      }
+      .intro {
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+      }
+      .hidden {
+         display: none !important;
+         visibility: hidden !important;
+      }
+      svg {
+        cursor: crosshair;
+      }
+      .selection {
+        fill: none;
+      }
+      path {
+        stroke: #000;
+        stroke-width: 1;
+        fill: none;
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-7" id="menu"> 
+                <div id="input1">
+                    <p class="intro">Select the svg file you want to annotate.</p>
+                    <p><input type="file" id="svgfile"></p>
+                </div>
+                <div id="input2" class="hidden">
+                    <p class="intro">Select the label file you want to annotate.</p>
+                    <p><input type="file" id="labelfile"></p>
+                </div>
+                <div id="start_over" class="hidden">
+                    <button class="btn btn-default">Start Over</button>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div id="labels"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-7"> 
+                <div class="canvas" id="thesvg"></div>
+            </div>
+        </div>        
+   </div>  
+
+<!--Jquery, Bootstrap, and d3-->
+<script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>    
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+// Clicking the startover button resets everything
+$("#start_over").click(function(){
+  location.reload();
+});
+
+// from https://github.com/substack/point-in-polygon
+function pointInPolygon (point, vs) {
+  var xi, xj, i, intersect,
+      x = point[0],
+      y = point[1],
+      inside = false;
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    xi = vs[i][0],
+    yi = vs[i][1],
+    xj = vs[j][0],
+    yj = vs[j][1],
+    intersect = ((yi > y) != (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function unhighlight() {
+  // Set points back to original color
+  d3.selectAll("path").each(function(){
+    // This is hard coded for now as gray
+    d3.select(this).style("fill","#666666");
+  })
+}
+
+function highlight(ids) {
+  // First unhighlight all the circles.
+  unhighlight();
+
+  // Hide the selection
+  d3.select(".selection").style("fill","none")
+
+  // Highlight selected paths
+  d3.selectAll("path").filter(function(d, i) {
+    return ids.indexOf(this.id) > -1;
+  })
+  .style("fill","orange")
+}
+
+var svg;
+var labels;
+
+// Function to read svg file
+function readerHandler(e2) { 
+  var store = document.getElementById('thesvg');
+  store.innerHTML = e2.target.result; 
+}
+
+function labelHandler(e2) { 
+  labels = e2.target.result;
+}
+
+
+function addLabels() {
+  d3.select("#input2").classed("hidden",true);
+  d3.select("#start_over").classed("hidden",false);
+
+
+}
+
+function parsePaths() {
+
+  d3.select("#input1").classed("hidden",true);
+  d3.select("#input2").classed("hidden",false);
+
+  d3.selectAll("path") 
+    .each(function(d, i) {
+       d3.select(this).classed("pixel",true);
+  });
+
+  // Line for selection
+  line = d3.svg.line(),
+
+  // Define drag behavior
+  drag = d3.behavior.drag()
+     .on("dragstart", function() {
+         // Empty the coords array.
+         coords = [];
+         svg = d3.select(this);
+
+         // If a selection line already exists, remove it.
+         svg.select(".selection").remove();
+
+         // Add a new selection line.
+         svg.append("path").attr({"class": "selection"});
+     })
+     .on("drag", function() {
+         // Store the mouse's current position
+         coords.push(d3.mouse(this));
+
+         svg = d3.select(this);
+
+         // Change the path of the selection line
+         // to represent the area where the mouse
+         // has been dragged.
+         svg.select(".selection").attr({
+             d: line(coords)
+         });
+
+         // Figure out which dots are inside the
+         // drawn path and highlight them.
+         selected = [];
+
+         // We need to know relative position of svg on page
+         //position = svg[0][0].getBoundingClientRect()
+         svg.selectAll("path.pixel").each(function(d, i) {
+
+             // Translation from top, plus some fudge (is there rounding?)
+             var diffx = parseFloat(this.attributes.d.textContent.split(" ")[1].split(",")[0])
+             var diffy = parseFloat(this.attributes.d.textContent.split(" ")[1].split(",")[1])  
+             var x = parseFloat(this.attributes.transform.textContent.split(",")[4]) + diffx - 3
+             var y = parseFloat(this.attributes.transform.textContent.split(",")[5]) + diffy - 1
+             point = [x,y];
+             if (pointInPolygon(point, coords)) {
+                selected.push(this.id);
+             }
+         });
+             highlight(selected);
+          })
+     .on("dragend", function() {
+          svg = d3.select(this);
+          // If the user clicks without having
+          // drawn a path, remove any paths
+          // that were drawn previously.
+          if (coords.length === 0) {
+              d3.selectAll("svg path.selection").remove();
+              unhighlight();
+              return;
+          }
+
+          // Draw a path between the first point
+          // and the last point, to close the path.
+          svg.append("path").attr({
+            "class": "terminator",
+             d: line([coords[0], coords[coords.length-1]])
+          });
+       });
+
+    // Do it!
+    d3.select("svg").call(drag)
+
+}
+
+function readfile(e1){
+  var fileobj = e1.target.files[0]; 
+  var fr = new FileReader();
+  // When the image loads, add it to the page
+  fr.onload = readerHandler;  
+  // When it finishes loading, start d3 stuffs
+  fr.onloadend = parsePaths;
+  // Do it!
+  fr.readAsText(fileobj); 
+}
+
+function readlabels(e1){
+  var fileobj = e1.target.files[0]; 
+  var fr = new FileReader();
+  // When the image loads, add it to the page
+  fr.onload = labelHandler;
+  // When it finishes loading, start d3 stuffs
+  fr.onloadend = addLabels;
+  // Do it!
+  fr.readAsText(fileobj); 
+}
+
+
+window.onload=function(){
+  var svgfile = document.getElementById("svgfile");
+  svgfile.addEventListener('change', readfile, false)
+  var labelfile = document.getElementById("labelfile");
+  labelfile.addEventListener('change', readlabels, false)
+}
+</script>
+
+  </body>
+</html>
