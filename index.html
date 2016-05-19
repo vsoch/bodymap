@@ -1987,6 +1987,7 @@ $(document).ready(function(){
 
     //Vanessa's Hacky save svg function!
     $("#save_svg").click(function() {
+        $(".pixel").css("fill","#666666")
         var svg = document.getElementsByTagName("svg");
         var serializer = new XMLSerializer();
         var svg_blob = new Blob([serializer.serializeToString(svg[0])],
