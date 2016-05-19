@@ -1812,6 +1812,15 @@ function addLabels() {
           $(this).addClass('selected_label');
           $(this).css("background-color","orange");    
       }
+
+
+      // Allow for annotation if there is a selection
+      if ($(".highlight").length > 0){
+          if ($(".selected_label").length > 0){
+              $("#annotate_button").removeClass("disabled")
+          }
+      }
+
   });
 
 }
