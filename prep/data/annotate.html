@@ -8,6 +8,10 @@
       body {
         font-family: 'Roboto', sans-serif;
       }
+      #labels {
+        background-color: #F7F7F7;
+        min-height: 101px;
+      }
       #themenu {
         background-color: #F7F7F7;
         padding:20px;
@@ -57,9 +61,19 @@
             </div>
         </div>        
         <div id="labels" class="col-md-5">
+            <div class="row" id="themenu">
+            <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-primary active">
+                <input type="radio" name="options" id="option1" autocomplete="off" checked> Annotate</label>
+                <label class="btn btn-primary">
+                <input type="radio" name="options" id="option2" autocomplete="off"> View </label>
+            </div>
+            </div>
+         <div class="row">
             <h1 id="labelh1" class="hidden">Labels</h1>
             <ul>
             </ul>
+            </div>
         </div>
 
    </div>  
@@ -161,6 +175,7 @@ function parsePaths() {
 
          // If a selection line already exists, remove it.
          svg.select(".selection").remove();
+         svg.select(".terminator").remove();
 
          // Add a new selection line.
          svg.append("path").attr({"class": "selection"});
