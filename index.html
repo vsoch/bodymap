@@ -1950,6 +1950,13 @@ $(document).ready(function(){
         });
         selected_labels = selected_labels.toArray().join(" ")
         $(".highlight").addClass(selected_labels)
+
+        // Unselect the annotate button, and change the color to alert user its done
+        $("#annotate_button").removeClass("active")
+        $(".highlight").css("fill","aqua")
+        svg.select(".selection").remove();
+        svg.select(".terminator").remove();
+
     })
 
     // Clicking view button highlights labels
