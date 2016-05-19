@@ -3,12 +3,12 @@
 <html>
   <head>
     <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-    <style type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
     <style type="text/css">
       body {
         font-family: 'Roboto', sans-serif;
       }
-      #menu {
+      #themenu {
         background-color: #F7F7F7;
         padding:20px;
       }
@@ -38,8 +38,8 @@
   <body>
 
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-7" id="menu"> 
+        <div class="col-md-7"> 
+            <div class="row" id="themenu">
                 <div id="input1">
                     <p class="intro">Select the svg file you want to annotate.</p>
                     <p><input type="file" id="svgfile"></p>
@@ -52,15 +52,16 @@
                     <button class="btn btn-default">Start Over</button>
                 </div>
             </div>
-            <div class="col-md-5">
-                <div id="labels"></div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-7"> 
+            <div class="row">
                 <div class="canvas" id="thesvg"></div>
             </div>
         </div>        
+        <div id="labels" class="col-md-5">
+            <h1 id="labelh1" class="hidden">Labels</h1>
+            <ul>
+            </ul>
+        </div>
+
    </div>  
 
 <!--Jquery, Bootstrap, and d3-->
@@ -124,15 +125,18 @@ function readerHandler(e2) {
 }
 
 function labelHandler(e2) { 
-  labels = e2.target.result;
+  labels = JSON.parse(e2.target.result);
 }
 
 
 function addLabels() {
   d3.select("#input2").classed("hidden",true);
+  d3.select("labelh1").classed("hidden",false);
   d3.select("#start_over").classed("hidden",false);
-
-
+  $.each(labels, function( index, label ) {
+      $("#labels ul").append('<li>' + index + '</li>'); 
+  });
+  
 }
 
 function parsePaths() {
