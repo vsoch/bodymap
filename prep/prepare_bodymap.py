@@ -8,8 +8,8 @@ from svgtools import create_pointilism_svg
 png_image = "data/body.png"
 
 create_pointilism_svg(png_image,uid_base="bodymap",
-                                sample_rate=2,width=330,height=800
-                                output_file="data/bodymap.svg")
+                                sample_rate=8,width=330,height=800,
+                                output_file="data/bodymappp.svg")
 
 # Now prepare for annotation of yaml_file
 # (can I do this without a server?)
