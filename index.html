@@ -1823,6 +1823,7 @@
            d3.select(this).on("mouseover",function(){
                $(this).css("fill","aqua")
                var labels = $(this).attr("class");
+               labels = labels.replace("pixel","")
                $("#message").text(labels);
            })
         })
