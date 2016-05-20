@@ -1811,6 +1811,7 @@
             var selection = $("#bodyparts").val();
             var points = d3.selectAll("."+selection)
             if (points[0].length!=0){
+                $("#message").text("");
                 d3.selectAll("."+selection).attr("style","fill:orange;stroke:none")
             } else {
                 $("#message").text("No annotations for " + selection + ".")
