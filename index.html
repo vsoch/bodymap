@@ -1821,7 +1821,9 @@
         d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
         d3.selectAll(".pixel").each(function(d){ 
            d3.select(this).on("mouseover",function(){
-               $(this).css("fill","orange")
+               $(this).css("fill","aqua")
+               var labels = $(this).attr("class");
+               $("#message").text(labels);
            })
         })
     });
