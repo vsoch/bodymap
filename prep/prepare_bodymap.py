@@ -3,17 +3,20 @@
 
 from svgtools import create_pointilism_svg
 from glob import glob
+from time import sleep
 import pandas
 import re
 
-# First prepare the svg body!
+# STEP 0: PREPARE BODYMAP ####################################################################
+
 png_image = "data/body.png"
 
 create_pointilism_svg(png_image,uid_base="bodymap",
                                 sample_rate=8,width=330,height=800,
                                 output_file="data/bodymappp.svg")
 
-# Next prepare data for fatalities
+
+# STEP 1: PREPARE DATA #######################################################################
 
 files = glob("data/*.csv")
 fatalities = pandas.DataFrame(columns=["FISCAL_YEAR","SUMMARY_DATE","INCIDENT_DATE","COMPANY","DESCRIPTION"])
@@ -68,12 +71,64 @@ fatalities
 fatalities.INCIDENT_DATE[fatalities["INCIDENT_DATE"].isnull()] = "01/01/2016"
 fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
-# Now prepare for annotation of yaml_file
-# (can I do this without a server?)
-yaml_file="data/simpleFMA.yml"
+# STEP 3: COORDINATE-IZE #####################################################################
 
+# The company variable has the company name and location, we need to split it
+locations = []
+companies = []
+for row in fatalities.iterrows():
+    company = row[1].COMPANY
+    locations.append("".join(company.split(',')[-2:]).strip())
+    companies.append("".join(company.split(',')[:2]).strip())
 
-# Anatomical entities, Foundational Model of Anatomy
-fma = pandas.read_csv("data/FMA.csv",sep=",",low_memory=False)
+fatalities = fatalities.rename(index=str, columns={"COMPANY": "COMPANY_ORIGINAL"})
+fatalities["LOCATION_RAW"] = locations
+fatalities["COMPANY"] = companies
+fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
-# Hmm this is too many, need to simplify.
+# Replace weird latin characters
+normalized = [x.replace('\xa0', '') for x in fatalities["LOCATION_RAW"]]
+fatalities.LOCATION_RAW = normalized
+
+# https://pypi.python.org/pypi/geopy
+from geopy.geocoders import Nominatim
+geolocator = Nominatim()
+
+manual_inspection = []
+for row in fatalities.iterrows():
+    index = row[0]
+    address = row[1].LOCATION_RAW
+    location = geolocator.geocode(address)
+    sleep(0.25)
+    if location != None:
+            fatalities.loc[index,"LOCATION"] = location.address
+            fatalities.loc[index,"ALTITUDE"] = location.altitude
+            fatalities.loc[index,"LATITUDE"] = location.latitude
+            fatalities.loc[index,"LONGITUDE"] = location.longitude
+            fatalities.loc[index,"LOCATION_IMPORTANCE"] = location.raw["importance"]
+    else:
+            print "Did not find %s" %(address)
+            manual_inspection.append(index)
+    
+# STEP 4: GEO-JSON ###########################################################################
+
+# https://pypi.python.org/pypi/geojson/
+
+from geojson import Point, Feature
+
+# STOPPED HERE - haven't done this yet (locations still parsing)
+seen = []
+for row in fatalities.iterrows():
+    index = row[0]
+
+    # Point gets latitude and longitude
+    lat = row[1].LATITUDE
+    lon = row[1].LONGITUDE
+    point = Point((lat,lon))
+
+    # Prepare some properties
+    properties = {"altitude":row[1].ALTITUDE,
+                  "importance":row[1].LOCATION_IMPORTANCE
+                  ""}
+    feature = Feature(geometry=point,id=index,properties=properties)
+
