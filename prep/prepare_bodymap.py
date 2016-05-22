@@ -116,36 +116,78 @@ for row in fatalities.iterrows():
             print "Did not find %s" %(address)
             manual_inspection.append(index)
 
-locs=[]
-for fat in fatalities.LOCATION.tolist():
-    if isinstance(fat,float):
-        locs.append("")
-    elif isinstance(fat,unicode):
-        locs.append(unicodedata.normalize("NFC",fat).encode('ASCII', 'ignore'))
-    else:
-        locs.append(fat)
-
-fatalities.LOCATION=locs    
+# Function to normalize unicode to ascii, remove characters
+def normalize_locations(fatalities):
+    locs=[]
+    for fat in fatalities.LOCATION.tolist():
+        if isinstance(fat,float):
+            locs.append("")
+        elif isinstance(fat,unicode):
+            locs.append(unicodedata.normalize("NFC",fat).encode('ASCII', 'ignore'))
+        else:
+            locs.append(fat)
+    fatalities.LOCATION=locs
+    return fatalities
+    
+fatalities = normalize_locations(fatalities)
 fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
+
 found = []
-for mi in manual_inspection:
+not_found = []
+while len(manual_inspection) > 0:
+    mi = manual_inspection.pop()
     row = fatalities.loc[mi]
     # Try finding the state, and keeping one word before it, adding comma
     address = row.LOCATION_RAW
     match = re.search("\s\w+\s[A-Z]{2}",address)
+    wasfound = False
     if match!= None:
         address = address[match.start():].strip()
         location = geolocator.geocode(address)
         sleep(0.5)
         if location != None:
             print "FOUND %s" %(address)
+            wasfound = True
             fatalities = add_entry(index,location,fatalities)
             # Save the address that was used
             fatalities.loc[index,"LOCATION_RAW"] = address
             found.append(mi)
+    if wasfound == False:
+        not_found.append(mi)
 
 manual_inspection = [x for x in manual_inspection if x not in found]
+
+fatalities = normalize_locations(fatalities)
+fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
+
+# Try just using zip code - this might be best strategy
+found = []
+not_found = []
+while len(manual_inspection) > 0:
+    mi = manual_inspection.pop()
+    row = fatalities.loc[mi]
+    # Try finding the state, and keeping one word before it, adding comma
+    address = row.LOCATION_RAW
+    match = re.search("[A-Z]{2}",address)
+    wasfound = False
+    if match!= None:
+        address = address[match.start():].strip()
+        location = geolocator.geocode(address)
+        sleep(0.5)
+        if location != None:
+            print "FOUND %s" %(address)
+            wasfound = True
+            fatalities = add_entry(index,location,fatalities)
+            # Save the address that was used
+            fatalities.loc[index,"LOCATION_RAW"] = address
+            found.append(mi)
+    if wasfound == False:
+        not_found.append(mi)
+
+
+fatalities = normalize_locations(fatalities)
+fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
 # STEP 4: GEO-JSON ###########################################################################
 
