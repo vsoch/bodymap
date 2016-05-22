@@ -98,18 +98,31 @@ manual_inspection = []
 for row in fatalities.iterrows():
     index = row[0]
     address = row[1].LOCATION_RAW
-    location = geolocator.geocode(address)
-    sleep(0.25)
-    if location != None:
+    if row[1].LOCATION == "" and index not in manual_inspection:
+        location = geolocator.geocode(address)
+        sleep(0.5)
+        if location != None:
             fatalities.loc[index,"LOCATION"] = location.address
             fatalities.loc[index,"ALTITUDE"] = location.altitude
             fatalities.loc[index,"LATITUDE"] = location.latitude
             fatalities.loc[index,"LONGITUDE"] = location.longitude
             fatalities.loc[index,"LOCATION_IMPORTANCE"] = location.raw["importance"]
-    else:
+        else:
             print "Did not find %s" %(address)
             manual_inspection.append(index)
-    
+
+locs=[]
+for fat in fatalities.LOCATION.tolist():
+    if isinstance(fat,float):
+        locs.append("")
+    elif isinstance(fat,unicode):
+        locs.append(unicodedata.normalize("NFC",fat).encode('ASCII', 'ignore'))
+    else:
+        locs.append(fat)
+
+fatalities.LOCATION=locs    
+fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
+
 # STEP 4: GEO-JSON ###########################################################################
 
 # https://pypi.python.org/pypi/geojson/
