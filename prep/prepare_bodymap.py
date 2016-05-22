@@ -94,6 +94,15 @@ fatalities.LOCATION_RAW = normalized
 from geopy.geocoders import Nominatim
 geolocator = Nominatim()
 
+# Function to add an entry
+def add_entry(index,location,fatalities):
+    fatalities.loc[index,"LOCATION"] = location.address
+    fatalities.loc[index,"ALTITUDE"] = location.altitude
+    fatalities.loc[index,"LATITUDE"] = location.latitude
+    fatalities.loc[index,"LONGITUDE"] = location.longitude
+    fatalities.loc[index,"LOCATION_IMPORTANCE"] = location.raw["importance"]
+    return fatalities
+
 manual_inspection = []
 for row in fatalities.iterrows():
     index = row[0]
@@ -102,11 +111,7 @@ for row in fatalities.iterrows():
         location = geolocator.geocode(address)
         sleep(0.5)
         if location != None:
-            fatalities.loc[index,"LOCATION"] = location.address
-            fatalities.loc[index,"ALTITUDE"] = location.altitude
-            fatalities.loc[index,"LATITUDE"] = location.latitude
-            fatalities.loc[index,"LONGITUDE"] = location.longitude
-            fatalities.loc[index,"LOCATION_IMPORTANCE"] = location.raw["importance"]
+            fatalities = add_entry(index,location,fatalities)
         else:
             print "Did not find %s" %(address)
             manual_inspection.append(index)
@@ -122,6 +127,25 @@ for fat in fatalities.LOCATION.tolist():
 
 fatalities.LOCATION=locs    
 fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
+
+found = []
+for mi in manual_inspection:
+    row = fatalities.loc[mi]
+    # Try finding the state, and keeping one word before it, adding comma
+    address = row.LOCATION_RAW
+    match = re.search("\s\w+\s[A-Z]{2}",address)
+    if match!= None:
+        address = address[match.start():].strip()
+        location = geolocator.geocode(address)
+        sleep(0.5)
+        if location != None:
+            print "FOUND %s" %(address)
+            fatalities = add_entry(index,location,fatalities)
+            # Save the address that was used
+            fatalities.loc[index,"LOCATION_RAW"] = address
+            found.append(mi)
+
+manual_inspection = [x for x in manual_inspection if x not in found]
 
 # STEP 4: GEO-JSON ###########################################################################
 
