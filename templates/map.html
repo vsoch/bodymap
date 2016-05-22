@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/polymaps.min.js') }}"></script>
+    <style type="text/css">
+
+@import url("{{ url_for('static', filename='css/map.css') }}");
+
+#map {
+  background: #021019;
+}
+
+.compass .back {
+  fill: #256574;
+}
+
+.compass .fore, .compass .chevron {
+  stroke: #1AA398;
+}
+
+#copy, #copy a {
+  color: #1AA398;
+}
+</style>
+
+{% endblock %}
+    
+{% block content %}
+<div id="bodyparts" style="position:fixed;top:5px;right:10px;width:100px;height:50px">
+  <h4 id="message">BODYMAP</h4>
+</div>
+        <div class="row">
+            <div class="col-md-9" id="map">
+                <script>
+                var po = org.polymaps;
+
+                var map = po.map()
+                    .container(document.getElementById("map").appendChild(po.svg("svg")))
+                    .add(po.interact())
+                    .add(po.hash());
+
+                map.add(po.image()
+                   .url(po.url("http://{S}tile.cloudmade.com"
+                   + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
+                   + "/999/256/{Z}/{X}/{Y}.png")
+                   .hosts(["a.", "b.", "c.", ""])));
+
+                map.add(po.compass()
+                .pan("none"));
+               </script>
+
+            </div>
+            <div class="col-md-3">
+                {{ bodymap | safe }}
+            </div>
+        </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+    $(document).ready(function() {
+        d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
+        d3.selectAll(".pixel").each(function(d){ 
+           d3.select(this).on("mouseover",function(){
+               $(this).css("fill","orange")
+               var bodyparts = $(this).attr("class")
+               $("#message").text(bodyparts)
+           })
+           d3.select(this).on("mouseout",function(){
+               $(this).css("fill","white")
+           })
+        });
+    });
+    </script>
+{% endblock %}

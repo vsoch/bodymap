@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+    
+{% block content %}
+
+<div class="col-md-3">
+    <div class="row">
+        {{ bodymap | safe }}
+    </div>
+</div>
+
+<div class ="col-md-7">
+    <div style="padding-top:200px;padding-left:200px">
+    <h1 style="color:white;">What would you like to explore?</h1>
+    <select id="bodyparts">
+            <option>--</option>
+        {% for label,fma in labels.iteritems() %}
+            <option value="{{ label }}" name="{{ label }}">{{ label }}</option>
+        {% endfor %}
+    </select>
+    <h4 style="color:#F7F7F7;padding-top:20px" id="message"></h4>
+    </div>
+</div>
+
+<div class ="col-md-2" style="padding-top:30px">
+ <button class="btn btn-sm btn-default" id="annotate" style="background-color:#831F69;color:white">Annotate Your Own</button>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script type="text/javascript">
+    $(document).ready(function() {
+        var bodyparts = $("#bodyparts").select2();
+
+        $("#annotate").click(function(){
+            document.location = "http://vsoch.github.io/bodymap/annotate.html";
+        });
+
+        bodyparts.on("change", function (e) { 
+            d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
+            var selection = $("#bodyparts").val();
+            var points = d3.selectAll("."+selection)
+            if (points[0].length!=0){
+                d3.selectAll("."+selection).attr("style","fill:orange;stroke:none")
+            } else {
+                $("#message").text("No annotations for " + selection + ".")
+            }
+        }) 
+
+        d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
+        d3.selectAll(".pixel").each(function(d){ 
+           d3.select(this).on("mouseover",function(){
+               $(this).css("fill","orange")
+           })
+        })
+    });
+    </script>
+{% endblock %}

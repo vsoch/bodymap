@@ -4,7 +4,12 @@ html, body {
 
 body {
   margin: 0;
-  background: #E5E0D9;
+  /*background: #E5E0D9;*/
+  background-color:#021019;
+}
+
+#map {
+  height:780px !important;
 }
 
 svg {
