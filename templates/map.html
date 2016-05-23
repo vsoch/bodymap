@@ -1,27 +1,8 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <script type="text/javascript" src="{{ url_for('static', filename='js/polymaps.min.js') }}"></script>
-    <style type="text/css">
-
-@import url("{{ url_for('static', filename='css/map.css') }}");
-
-#map {
-  background: #021019;
-}
-
-.compass .back {
-  fill: #256574;
-}
-
-.compass .fore, .compass .chevron {
-  stroke: #1AA398;
-}
-
-#copy, #copy a {
-  color: #1AA398;
-}
-</style>
+<script src="/static/js/topojson.js"></script>
+<script src="/static/js/queue.js"></script>
 
 {% endblock %}
     
@@ -31,43 +12,6 @@
 </div>
         <div class="row">
             <div class="col-md-9" id="map">
-                <script>
-                var po = org.polymaps;
-
-                // Function to load point
-               function load(e) {
-                   for (var i = 0; i < e.features.length; i++) {
-                       var feature = e.features[i];
-                       console.log(feature);
-                       feature.element.appendChild(po.svg("title")
-                           .appendChild(document.createTextNode(feature.data.id))
-                           .parentNode);
-                        }
-                    }
-
-                var map = po.map()
-                    .container(document.getElementById("map").appendChild(po.svg("svg")))
-                    .add(po.interact())
-                    .add(po.hash());
-
-                map.add(po.image()
-                   .url(po.url("http://{S}tile.cloudmade.com"
-                   + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
-                   + "/999/256/{Z}/{X}/{Y}.png")
-                   .hosts(["a.", "b.", "c.", ""])));
-
-                map.add(po.geoJson()
-                   .url("{{ url_for('static', filename='geopoints.json') }}")
-                   .id("deaths")
-                   .zoom(12)
-                   .tile(false)
-                   .on("load",load) 
-                 );
-
-                map.add(po.compass()
-                .pan("none"));
-               </script>
-
             </div>
             <div class="col-md-3">
                 {{ bodymap | safe }}
@@ -77,6 +21,8 @@
 
 {% block scripts %}
     <script type="text/javascript">
+    var deaths = {{ geojson | safe }}
+
     $(document).ready(function() {
         d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
         d3.selectAll(".pixel").each(function(d){ 
@@ -89,6 +35,136 @@
                $(this).css("fill","white")
            })
         });
+
+   // Let's make a map!
+   var  width = 1200,
+	height = 800;
+
+   var proj = d3.geo.mercator()
+	        .center([-30, 50])
+		.scale(180)
+		.rotate([-10,0]);
+
+var path = d3.geo.path()
+		.projection(proj);
+
+var zoom = d3.behavior.zoom()
+    .translate(proj.translate())
+    .scale(proj.scale())
+    .scaleExtent([height*.33, 4 * height])
+    .on("zoom", zoom);
+
+
+var svg = d3.select("#map").append("svg")
+		.attr("width", width)
+		.attr("height", height)
+		.call(zoom);
+
+function zoom() {
+	proj.translate(d3.event.translate).scale(d3.event.scale);
+	svg.selectAll("path").attr("d", path);
+	circles
+  		.attr("cx", function(d){return proj([d.long, d.lat])[0];})
+		.attr("cy", function(d){return proj([d.long, d.lat])[1];});
+}
+
+var borders = svg.append("g");
+var impacts = svg.append("g");
+var colorScale = d3.scale.linear().domain([1400, 1800, 1860, 1940, 2015]);
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 1e-6)
+    .style("background", "rgba(250,250,250,.7)");
+
+tooltip.append("img")
+	.attr("id", "tooltipImg")
+	.attr("height", 200)
+	.attr("width", 200)
+	.style("opacity", "1");
+
+queue()
+	.defer(d3.json, "/static/worldTopo.json")
+	.defer(d3.json, "/static/geopoints.json")
+	.await(ready);
+
+points = [];
+function ready(error, topology, geopoints){
+	borders.selectAll("path")
+		.data(topojson.object(topology, topology.objects.countries)
+				.geometries)
+	.enter()
+		.append("path")
+		.attr("d", path)
+		.attr("class", "border")
+	
+
+	points = [];
+	geopoints.features.forEach(function(d){
+		d.lat = +d.geometry.coordinates[1];
+		d.long = +d.geometry.coordinates[0];
+		d.id = +d.id;
+                points.push(d)
+	});
+	points.sort(function(a, b){return a.id - b.id;})
+
+	colorScale
+		.range(["#FFFF66", "#FFFF00", "#E68000", "#D94000", "#CC0000"]);
+
+	circles = impacts.selectAll("circle")
+		.data(points).enter()
+			.append("svg:a")
+		    	.attr("xlink:href", function(d) { return "#" })
+		    	.attr("xlink:show", "new")
+			.append("circle")
+				.attr("cx", function(d){return proj([d.long, d.lat])[0];})
+				.attr("cy", function(d){return proj([d.long, d.lat])[1];})
+				.attr("r", 2)
+				.attr("id", function(d){return "id" + d.id;})
+				.style("fill", "orange")
+		.on("mouseover", function(d){
+			d3.select(this)
+				.attr("stroke", "black")
+				.attr("stroke-width", 1)
+				.attr("fill-opacity", 1);
+
+			tooltip
+			    .style("left", (d3.event.pageX + 5) + "px")
+			    .style("top", (d3.event.pageY - 5) + "px")
+			    .transition().duration(300)
+			    .style("opacity", 1)
+			    .style("display", "block")
+
+			})
+		.on("mouseout", function(d){
+			d3.select(this)
+				.attr("stroke", "")
+				.attr("fill-opacity", function(d){return 1;})
+
+			tooltip.transition().duration(700).style("opacity", 0);
+		});
+
+
+
+	function render(method){
+		d3.select(this).call(method);
+	}
+
+
+	lastFilterArray = [];
+	points.forEach(function(d, i){
+		lastFilterArray[i] = 1;
+	});
+
+
+	window.reset = function(i){
+		charts[i].filter(null);
+		renderAll();
+	}
+
+}
+
+
     });
     </script>
 {% endblock %}

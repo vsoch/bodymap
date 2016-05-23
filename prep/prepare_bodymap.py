@@ -7,6 +7,7 @@ from svgtools.utils import save_json
 from glob import glob
 from time import sleep
 import pandas
+import pyproj # coordinate conversion
 import json
 import re
 
@@ -412,6 +413,22 @@ len(not_found)
 #fatalities.LOCATION_IMPORTANCE[fatalities.LOCATION_IMPORTANCE.isnull()==True]
 fatalities.LOCATION_IMPORTANCE.fillna(0)
 
+# We need to convert EPSG: 4326 to EPSG 3857
+
+incoord = pyproj.Proj(init='epsg:4326')
+outcoord = pyproj.Proj(init='epsg:3857') #epsg 3857
+
+lats = []
+longs = []
+for row in fatalities.iterrows():
+    latitude = row[1].LATITUDE
+    longitude = row[1].LONGITUDE
+    x,y = pyproj.transform(incoord, outcoord, longitude, latitude)
+    lats.append(x)
+    longs.append(y)
+
+fatalities["LATITUDE_EPSG3857"] = lats
+fatalities["LONGITUDE_EPSG3857"] = longs
 fatalities = normalize_locations(fatalities)
 fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
@@ -510,7 +527,7 @@ for row in fatalities.iterrows():
     lat = row[1].LATITUDE
     lon = row[1].LONGITUDE
     
-    point = Point((lat,lon))
+    point = Point((lon,lat))
 
     # Prepare some properties
     properties = {"importance":row[1].LOCATION_IMPORTANCE}

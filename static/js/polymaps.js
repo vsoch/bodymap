@@ -1168,6 +1168,7 @@ po.geoJson = function(fetch) {
     return function(coordinates) {
       l.lat = coordinates[1];
       l.lon = coordinates[0];
+      //console.log(l);
       var p = proj(l);
       coordinates.x = p.x;
       coordinates.y = p.y;
@@ -1176,6 +1177,8 @@ po.geoJson = function(fetch) {
   }
 
   function geometry(o, proj) {
+    //console.log(o);
+    //console.log(proj);
     return o && o.type in types && types[o.type](o, proj);
   }
 
@@ -1184,6 +1187,8 @@ po.geoJson = function(fetch) {
     Point: function(o, proj) {
       var p = proj(o.coordinates),
           c = po.svg("circle");
+      //console.log(o)
+      //console.log(proj)
       c.setAttribute("r", 4.5);
       c.setAttribute("transform", "translate(" + p.x + "," + p.y + ")");
       return c;
@@ -1337,6 +1342,9 @@ po.geoJson = function(fetch) {
     var g = tile.element = po.svg("g");
     tile.features = [];
 
+    //console.log(tile);
+    //console.log(proj);
+    //console.log(proj(tile).locationPoint)
     proj = projection(proj(tile).locationPoint);
 
     function update(data) {
@@ -1351,6 +1359,7 @@ po.geoJson = function(fetch) {
           for (var i = 0; i < data.features.length; i++) {
             var feature = data.features[i],
                 element = geometry(feature.geometry, proj);
+                //console.log(feature);
             if (element) updated.push({element: g.appendChild(element), data: feature});
           }
           break;
