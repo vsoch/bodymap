@@ -1,8 +1,10 @@
+
 <!doctype html>
 <html>
   <head>
       <meta charset="utf-8">
-      <title>BodyMap</title>
+      <title>BodyMap!</title>
+      <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
       <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
       <link rel="stylesheet" href="static/css/bootstrap.min.css">
       <link rel="stylesheet" href="static/css/style.css">
@@ -15,17 +17,41 @@
       <script src="static/js/datatables.min.js"></script>
       <script src="https://d3js.org/d3.v3.min.js"></script>
       
-      
+<script src="static/js/topojson.js"></script>
+<script src="static/js/queue.js"></script>
+<style>
+.pixel {
+  cursor: pointer;
+}
+
+#tags {
+ position:fixed;
+ bottom:10px;
+ left:0px;
+ z-index:2;
+}
+
+.btn {
+  margin-right:2px;
+  background-color:white;
+  color:black;
+}
+</style>
+
 
   </head>
   <body>
 
     <div class="container-fluid">
     
-
-<div class="col-md-3">
-    <div class="row">
-        <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="330" height="800" id="bodymap">
+<div id="bodyparts" style="position:fixed;top:5px;right:10px;width:100px;height:50px">
+  <h4 id="message" style="color:white">BODYMAP</h4>
+</div>
+        <div class="row">
+            <div class="col-md-9" id="map">
+            </div>
+            <div class="col-md-3">
+                <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="330" height="800" id="bodymap">
   <defs id="defs66559"/>
   <metadata id="metadata66562">
     <rdf:rdf>
@@ -1655,184 +1681,193 @@
   </g>
 </svg>
 
-    </div>
-</div>
-
-<div class ="col-md-7">
-    <div style="padding-top:200px;padding-left:200px">
-    <h1 style="color:white;">What would you like to explore?</h1>
-    <select id="bodyparts">
-            <option>--</option>
-        
-            <option value="heart" name="heart">heart</option>
-        
-            <option value="right_arm" name="right_arm">right_arm</option>
-        
-            <option value="thigh" name="thigh">thigh</option>
-        
-            <option value="forearm" name="forearm">forearm</option>
-        
-            <option value="butt" name="butt">butt</option>
-        
-            <option value="back" name="back">back</option>
-        
-            <option value="right_eye" name="right_eye">right_eye</option>
-        
-            <option value="lung" name="lung">lung</option>
-        
-            <option value="ligament" name="ligament">ligament</option>
-        
-            <option value="skin" name="skin">skin</option>
-        
-            <option value="limb" name="limb">limb</option>
-        
-            <option value="pelvis" name="pelvis">pelvis</option>
-        
-            <option value="left_hand" name="left_hand">left_hand</option>
-        
-            <option value="arm" name="arm">arm</option>
-        
-            <option value="kidney" name="kidney">kidney</option>
-        
-            <option value="penis" name="penis">penis</option>
-        
-            <option value="right_leg" name="right_leg">right_leg</option>
-        
-            <option value="intesine" name="intesine">intesine</option>
-        
-            <option value="eye" name="eye">eye</option>
-        
-            <option value="thumb" name="thumb">thumb</option>
-        
-            <option value="vagina" name="vagina">vagina</option>
-        
-            <option value="finger" name="finger">finger</option>
-        
-            <option value="left_foot" name="left_foot">left_foot</option>
-        
-            <option value="ankle" name="ankle">ankle</option>
-        
-            <option value="left_arm" name="left_arm">left_arm</option>
-        
-            <option value="calf" name="calf">calf</option>
-        
-            <option value="right_foot" name="right_foot">right_foot</option>
-        
-            <option value="body" name="body">body</option>
-        
-            <option value="head" name="head">head</option>
-        
-            <option value="stomach" name="stomach">stomach</option>
-        
-            <option value="leg" name="leg">leg</option>
-        
-            <option value="cartilage" name="cartilage">cartilage</option>
-        
-            <option value="gallbladder" name="gallbladder">gallbladder</option>
-        
-            <option value="right_ear" name="right_ear">right_ear</option>
-        
-            <option value="hand" name="hand">hand</option>
-        
-            <option value="mouth" name="mouth">mouth</option>
-        
-            <option value="breast" name="breast">breast</option>
-        
-            <option value="trunk" name="trunk">trunk</option>
-        
-            <option value="foot" name="foot">foot</option>
-        
-            <option value="knee" name="knee">knee</option>
-        
-            <option value="ear" name="ear">ear</option>
-        
-            <option value="bone" name="bone">bone</option>
-        
-            <option value="neck" name="neck">neck</option>
-        
-            <option value="shoulder" name="shoulder">shoulder</option>
-        
-            <option value="tendon" name="tendon">tendon</option>
-        
-            <option value="muscle" name="muscle">muscle</option>
-        
-            <option value="waist" name="waist">waist</option>
-        
-            <option value="organ" name="organ">organ</option>
-        
-            <option value="spleen" name="spleen">spleen</option>
-        
-            <option value="index_finger" name="index_finger">index_finger</option>
-        
-            <option value="left_leg" name="left_leg">left_leg</option>
-        
-            <option value="right_hand" name="right_hand">right_hand</option>
-        
-            <option value="left_eye" name="left_eye">left_eye</option>
-        
-            <option value="nose" name="nose">nose</option>
-        
-            <option value="teeth" name="teeth">teeth</option>
-        
-            <option value="elbow" name="elbow">elbow</option>
-        
-            <option value="wrist" name="wrist">wrist</option>
-        
-            <option value="tongue" name="tongue">tongue</option>
-        
-            <option value="toe" name="toe">toe</option>
-        
-            <option value="left_ear" name="left_ear">left_ear</option>
-        
-            <option value="liver" name="liver">liver</option>
-        
-    </select>
-    <h4 style="color:#F7F7F7;padding-top:20px" id="message"></h4>
-    </div>
-</div>
-
-<div class ="col-md-2" style="padding-top:30px">
- <button class="btn btn-sm btn-default" id="annotate" style="background-color:#831F69;color:white">Annotate Your Own</button>
-<button class="btn btn-sm btn-default" id="map" style="background-color:#831F69;color:white">Map</button>
-</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" id="tags">
+               <!-- buttons for each tag will be appended here-->
+            </div>
+        </div>
 
     </div>
 
 
     <script type="text/javascript">
+
     $(document).ready(function() {
-        var bodyparts = $("#bodyparts").select2();
-
-        $("#annotate").click(function(){
-            document.location = "http://vsoch.github.io/bodymap/annotate.html";
-        });
-
-        $("map").click(function(){
-            document.location = "map.html";
-        });
-
-
-        bodyparts.on("change", function (e) { 
-            d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
-            var selection = $("#bodyparts").val();
-            var points = d3.selectAll("."+selection)
-            if (points[0].length!=0){
-                $("#message").text("");
-                d3.selectAll("."+selection).attr("style","fill:orange;stroke:none")
-            } else {
-                $("#message").text("No annotations for " + selection + ".")
-            }
-        }) 
+        var counts = {'heart': [15, 36, 179, 497, 519, 603, 636, 725, 830, 874, 875, 993, 1003, 1041, 1090, 1974, 3617, 3668, 3684, 3689, 3716, 3721, 5648, 5676, 5678, 5887, 5905, 5979, 6031, 6059, 6072, 6215, 6316, 6372, 6376, 6438, 6516, 6533, 6694, 6790, 6837, 6920, 6921, 6934, 6935, 7029, 7045, 7047, 7098, 7122, 7190, 7244, 7252, 7274, 7278, 7310, 7424, 7589, 7718, 7838], 'thigh': [56, 141, 258, 551, 785, 882, 928, 929, 1376, 1418, 1478, 1491, 1607, 2314, 2406, 3134, 3378, 3597, 3626, 3635, 3655, 3725, 4062, 4461, 5033, 5233, 5250, 5251, 5286, 5384, 5680, 5868, 6007, 6012, 6509, 6718, 6787, 6801, 6814, 7182, 7222, 7411, 7446, 7520, 7589, 7618, 7843, 7844], 'butt': [115, 163, 244, 273, 369, 416, 505, 606, 685, 739, 777, 974, 1082, 1143, 1156, 1535, 1605, 1621, 1723, 1746, 2167, 2188, 2386, 2503, 2739, 3659, 3712, 4354, 4618, 4732, 5031, 5045, 5368, 5454, 5740, 5893, 6109, 6215, 6460, 6691, 6849, 6855, 6874, 6879, 7007, 7017, 7124, 7127, 7186, 7188, 7241, 7243, 7244, 7266, 7362, 7377, 7391, 7414, 7439, 7486, 7499, 7668, 7669, 7674, 7796, 7802, 7808], 'back': [0, 18, 32, 49, 58, 59, 61, 63, 91, 94, 113, 114, 119, 153, 164, 183, 210, 220, 221, 233, 241, 244, 246, 294, 300, 305, 319, 344, 369, 396, 534, 539, 564, 568, 569, 583, 606, 649, 658, 660, 685, 700, 771, 780, 807, 811, 841, 904, 916, 943, 959, 974, 977, 980, 982, 1052, 1069, 1097, 1119, 1124, 1142, 1194, 1216, 1236, 1266, 1281, 1304, 1445, 1533, 1535, 1550, 1578, 1584, 1628, 1716, 1733, 1809, 1919, 1938, 2008, 2014, 2015, 2025, 2063, 2188, 2199, 2216, 2270, 2308, 2420, 2431, 2441, 2503, 2590, 2605, 2668, 2682, 2699, 2739, 2799, 2800, 2864, 3055, 3059, 3093, 3097, 3139, 3144, 3155, 3233, 3330, 3398, 3415, 3441, 3442, 3518, 3521, 3528, 3577, 3578, 3583, 3588, 3595, 3614, 3624, 3631, 3692, 3693, 3700, 3719, 4179, 4277, 4496, 4497, 4507, 4554, 4618, 4732, 4737, 4856, 4960, 5031, 5045, 5049, 5051, 5088, 5115, 5117, 5118, 5228, 5280, 5319, 5365, 5368, 5392, 5395, 5444, 5454, 5503, 5531, 5574, 5624, 5641, 5659, 5660, 5670, 5698, 5764, 5812, 5819, 5829, 5885, 5923, 5938, 5964, 5980, 5983, 5997, 6109, 6130, 6154, 6178, 6255, 6286, 6293, 6301, 6335, 6420, 6431, 6506, 6551, 6571, 6580, 6681, 6688, 6691, 6696, 6706, 6709, 6710, 6730, 6738, 6763, 6770, 6804, 6814, 6832, 6858, 6865, 6876, 6879, 6884, 6886, 6887, 6891, 6931, 6945, 6970, 6975, 6994, 6995, 7009, 7020, 7044, 7049, 7114, 7125, 7127, 7133, 7142, 7152, 7157, 7158, 7181, 7194, 7211, 7217, 7221, 7232, 7252, 7254, 7259, 7265, 7279, 7283, 7288, 7299, 7301, 7311, 7316, 7335, 7348, 7355, 7377, 7386, 7410, 7427, 7444, 7452, 7464, 7470, 7485, 7536, 7540, 7571, 7575, 7577, 7590, 7592, 7603, 7605, 7607, 7669, 7717, 7736, 7780, 7802, 7817, 7822, 7828, 7831, 7848, 7851], 'foot': [2, 17, 33, 40, 77, 89, 156, 177, 192, 201, 215, 231, 235, 240, 250, 261, 292, 306, 401, 453, 494, 541, 618, 630, 631, 658, 659, 669, 682, 714, 715, 754, 838, 857, 863, 889, 944, 951, 956, 962, 1005, 1026, 1054, 1085, 1111, 1115, 1146, 1155, 1239, 1245, 1298, 1324, 1332, 1339, 1346, 1349, 1375, 1437, 1447, 1464, 1484, 1502, 1536, 1544, 1581, 1591, 1601, 1682, 1688, 1715, 1749, 1797, 1803, 1846, 1886, 1999, 2002, 2004, 2013, 2023, 2027, 2054, 2179, 2188, 2219, 2231, 2260, 3610, 3660, 3662, 5592, 5680, 5722, 5848, 5942, 5968, 6042, 6104, 6213, 6258, 6270, 6290, 6338, 6342, 6415, 6681, 6720, 6764, 6791, 6816, 6905, 6944, 6968, 7020, 7064, 7101, 7154, 7162, 7175, 7191, 7236, 7245, 7312, 7314, 7344, 7349, 7467, 7469, 7478, 7561, 7577, 7691, 7740, 7744, 7753, 7757, 7846], 'lung': [2965, 3553, 6537, 6727, 7047, 7104], 'limb': [19, 29, 38, 54, 249, 275, 325, 373, 431, 581, 746, 753, 909, 1035, 1167, 1379, 1452, 1490, 1540, 1559, 1568, 1668, 1692, 1693, 1757, 1784, 1951, 1993, 2049, 2068, 2090, 2156, 2227, 2261, 2452, 2820, 2842, 2974, 3108, 3268, 3284, 3367, 3436, 3552, 3687, 3729, 3989, 4131, 4537, 4705, 4736, 4803, 4810, 4824, 4986, 5144, 5294, 5385, 5499, 5592, 5605, 5608, 5692, 5713, 5748, 5808, 5830, 5900, 5966, 6051, 6101, 6261, 6336, 6361, 6362, 6463, 6497, 6579, 6662, 6806, 6815, 6854, 6856, 6869, 6980, 6995, 7032, 7135, 7146, 7150, 7170, 7194, 7303, 7313, 7426, 7437, 7444, 7510, 7513, 7606, 7611, 7660, 7678, 7712, 7743, 7764, 7804, 7805, 7810, 7822], 'pelvis': [832], 'arm': [41, 102, 520, 543, 546, 647, 676, 710, 770, 801, 836, 852, 883, 965, 1026, 1322, 1389, 1428, 1517, 1531, 1604, 1732, 1808, 1953, 1969, 1972, 2201, 2234, 2248, 2252, 2267, 2272, 2284, 2321, 2323, 2343, 2415, 2542, 2615, 2910, 2980, 3047, 3055, 3109, 3200, 3221, 3608, 3800, 4112, 4327, 4377, 4390, 4533, 4745, 4783, 4964, 4974, 5301, 5469, 5514, 5579, 5615, 5673, 5698, 5756, 5761, 5870, 5922, 5971, 6039, 6116, 6184, 6187, 6309, 6357, 6374, 6402, 6409, 6469, 6640, 6674, 6683, 6744, 6904, 6948, 6985, 6992, 7019, 7125, 7129, 7348, 7437, 7493, 7555, 7584, 7604, 7812, 7814], 'kidney': [7047], 'eye': [500, 899, 1456, 1942, 2946, 3583, 3768, 3922, 3967, 3992, 4624, 7224], 'finger': [5688, 6023], 'ankle': [145, 267, 6130, 7112], 'left_arm': [7584], 'calf': [6, 13, 40, 49, 51, 84, 115, 188, 198, 209, 225, 236, 314, 357, 363, 420, 433, 460, 491, 660, 724, 753, 776, 896, 944, 959, 1073, 1075, 1152, 1198, 1273, 1299, 1475, 1546, 1585, 1589, 1590, 1690, 1709, 1744, 1781, 1838, 2108, 2119, 2332, 2366, 2586, 2647, 2896, 2964, 3102, 3143, 3247, 3561, 3563, 3564, 3579, 3592, 3596, 3598, 3610, 3615, 3652, 3656, 3670, 3674, 3686, 3696, 3703, 3713, 3722, 3845, 4078, 4269, 4492, 5163, 5305, 5474, 5495, 5577, 5631, 5665, 5763, 5827, 5836, 5855, 5895, 5949, 5967, 5969, 5980, 5992, 5998, 6010, 6091, 6206, 6208, 6298, 6320, 6394, 6397, 6420, 6454, 6573, 6663, 6672, 6687, 6695, 6727, 6728, 6763, 6781, 6840, 6859, 6868, 6930, 6969, 6974, 6980, 6990, 7076, 7118, 7130, 7154, 7173, 7176, 7237, 7246, 7255, 7258, 7267, 7289, 7290, 7400, 7452, 7508, 7521, 7526, 7542, 7572, 7612, 7624, 7628, 7653, 7662, 7690, 7707, 7722, 7808, 7828], 'toe': [4222, 6187], 'body': [45, 60, 132, 207, 358, 527, 881, 995, 1083, 1674, 2020, 3367, 3596, 4001, 5003, 6173, 6239, 6409, 6664, 6676, 6907, 7013, 7060, 7071, 7137, 7186, 7292, 7501, 7785], 'head': [6, 13, 17, 24, 27, 29, 40, 46, 56, 61, 62, 67, 79, 84, 89, 99, 104, 105, 110, 115, 122, 124, 125, 126, 145, 148, 155, 156, 164, 165, 198, 202, 208, 210, 222, 281, 283, 284, 287, 289, 292, 307, 323, 332, 334, 364, 369, 377, 379, 381, 383, 390, 396, 404, 414, 427, 439, 455, 462, 475, 477, 482, 492, 494, 500, 504, 514, 517, 520, 528, 594, 606, 630, 637, 643, 667, 678, 682, 684, 698, 705, 706, 711, 724, 730, 738, 740, 767, 770, 772, 780, 784, 789, 790, 793, 804, 808, 814, 815, 827, 834, 852, 857, 870, 877, 897, 909, 925, 930, 939, 952, 964, 970, 980, 983, 984, 998, 1014, 1017, 1030, 1033, 1053, 1058, 1075, 1082, 1093, 1094, 1096, 1104, 1116, 1129, 1140, 1145, 1148, 1190, 1195, 1217, 1218, 1291, 1292, 1317, 1318, 1396, 1398, 1399, 1401, 1410, 1429, 1431, 1435, 1512, 1527, 1533, 1541, 1570, 1578, 1588, 1594, 1600, 1625, 1632, 1645, 1680, 1694, 1709, 1713, 1721, 1741, 1751, 1753, 1761, 1783, 1785, 1793, 1796, 1807, 1842, 1850, 1859, 1919, 1944, 1952, 1981, 2025, 2029, 2030, 2038, 2053, 2058, 2141, 2158, 2175, 2200, 2227, 2236, 2326, 2336, 2369, 2414, 2439, 2483, 2660, 2758, 2795, 2868, 2946, 2950, 2999, 3035, 3168, 3371, 3372, 3416, 3455, 3506, 3553, 3562, 3573, 3574, 3578, 3579, 3582, 3599, 3619, 3623, 3636, 3661, 3675, 3685, 3693, 3702, 3710, 3711, 3712, 3731, 3843, 3915, 3930, 4084, 4101, 4201, 4295, 4310, 4328, 4343, 4361, 4366, 4387, 4400, 4408, 4419, 4534, 4552, 4566, 4596, 4740, 4858, 4967, 4968, 5030, 5052, 5082, 5095, 5110, 5262, 5292, 5422, 5463, 5492, 5544, 5560, 5598, 5606, 5607, 5611, 5615, 5634, 5635, 5641, 5642, 5658, 5665, 5669, 5678, 5685, 5690, 5718, 5721, 5722, 5742, 5745, 5748, 5749, 5756, 5757, 5759, 5780, 5781, 5782, 5788, 5789, 5798, 5802, 5806, 5811, 5813, 5817, 5822, 5829, 5832, 5833, 5836, 5846, 5848, 5880, 5885, 5896, 5902, 5918, 5956, 5961, 5964, 5966, 5984, 5987, 5992, 5994, 6001, 6011, 6019, 6023, 6032, 6046, 6047, 6056, 6078, 6085, 6087, 6100, 6101, 6109, 6113, 6118, 6126, 6142, 6144, 6155, 6157, 6162, 6164, 6167, 6181, 6203, 6214, 6223, 6227, 6229, 6234, 6236, 6244, 6247, 6261, 6263, 6290, 6314, 6327, 6328, 6352, 6355, 6362, 6379, 6389, 6401, 6407, 6430, 6442, 6446, 6465, 6469, 6490, 6503, 6510, 6516, 6529, 6536, 6553, 6577, 6587, 6595, 6605, 6621, 6623, 6640, 6652, 6658, 6669, 6679, 6688, 6689, 6696, 6704, 6714, 6721, 6732, 6734, 6738, 6748, 6752, 6758, 6765, 6778, 6784, 6792, 6809, 6823, 6827, 6830, 6831, 6835, 6854, 6873, 6876, 6883, 6899, 6902, 6919, 6940, 6944, 6953, 6995, 7014, 7016, 7017, 7020, 7025, 7097, 7107, 7124, 7130, 7145, 7146, 7149, 7158, 7162, 7185, 7188, 7193, 7211, 7215, 7222, 7223, 7228, 7231, 7232, 7244, 7249, 7254, 7281, 7285, 7299, 7308, 7316, 7317, 7329, 7342, 7363, 7380, 7399, 7405, 7427, 7430, 7439, 7444, 7456, 7467, 7471, 7482, 7483, 7497, 7503, 7505, 7509, 7511, 7517, 7521, 7522, 7532, 7533, 7541, 7542, 7546, 7550, 7563, 7567, 7571, 7572, 7581, 7589, 7603, 7607, 7612, 7617, 7619, 7620, 7621, 7633, 7638, 7677, 7678, 7680, 7711, 7712, 7720, 7724, 7729, 7734, 7736, 7737, 7738, 7753, 7759, 7782, 7787, 7800, 7804, 7805, 7810, 7815, 7834, 7835], 'stomach': [368, 676, 1116, 1213, 1507, 1881, 2151, 2202, 3356, 3605, 4085, 4563, 5231, 6631, 6805, 7018, 7083, 7276, 7528, 7655, 7669], 'leg': [13, 267, 270, 514, 524, 573, 727, 895, 1154, 1179, 1516, 2044, 2070, 3060, 3379, 3404, 4461, 5090, 5724, 5986, 6001, 6132, 6180, 6710, 7047, 7049, 7215, 7383, 7605, 7648], 'hand': [8, 56, 61, 115, 169, 181, 247, 416, 697, 699, 777, 883, 985, 1223, 1247, 1752, 1982, 3544, 3591, 3679, 3713, 4177, 4354, 4578, 4647, 5841, 5860, 5868, 6031, 6239, 6248, 6253, 6768, 6775, 7004, 7040, 7064, 7101, 7124, 7188, 7348, 7377, 7391, 7444, 7612, 7628, 7674, 7789], 'mouth': [7466, 7560], 'liver': [65, 168, 238, 413, 428, 430, 541, 555, 583, 593, 684, 692, 723, 1091, 1164, 1283, 1407, 1563, 1661, 1840, 1860, 1936, 2065, 2266, 2296, 2319, 2673, 2873, 3330, 3689, 3732, 3894, 3955, 4290, 4301, 5029, 5226, 5293, 5351, 5376, 5589, 5745, 5825, 5892, 5901, 5902, 6074, 6100, 6205, 6273, 6424, 6540, 6814, 6819, 6882, 6933, 6938, 7027, 7073, 7089, 7097, 7421, 7460, 7649, 7774, 7836], 'trunk': [32, 289, 1598, 2026, 2886, 4016, 6823, 7081], 'penis': [52, 422, 7619], 'knee': [345, 348, 7252], 'ear': [0, 15, 36, 44, 56, 104, 179, 206, 226, 235, 329, 385, 389, 404, 420, 481, 497, 516, 519, 529, 540, 565, 585, 603, 605, 636, 672, 678, 704, 710, 725, 773, 814, 830, 835, 874, 875, 886, 892, 899, 923, 938, 941, 973, 975, 976, 988, 993, 1003, 1004, 1032, 1041, 1067, 1090, 1117, 1122, 1137, 1141, 1272, 1303, 1314, 1369, 1436, 1454, 1480, 1509, 1511, 1554, 1560, 1597, 1626, 1657, 1685, 1686, 1720, 1733, 1735, 1834, 1839, 1870, 1966, 1974, 1992, 2029, 2111, 2173, 2212, 2310, 2451, 2680, 2710, 2815, 3057, 3434, 3543, 3553, 3578, 3586, 3587, 3613, 3617, 3618, 3659, 3668, 3669, 3680, 3684, 3689, 3716, 3717, 3721, 3741, 3747, 3830, 4028, 4293, 4872, 4957, 5040, 5205, 5235, 5286, 5307, 5325, 5352, 5492, 5522, 5597, 5637, 5643, 5648, 5676, 5678, 5681, 5691, 5813, 5814, 5818, 5821, 5832, 5837, 5847, 5855, 5887, 5892, 5905, 5920, 5922, 5972, 5979, 5996, 6002, 6031, 6036, 6058, 6059, 6072, 6107, 6208, 6215, 6300, 6316, 6350, 6372, 6376, 6398, 6415, 6416, 6423, 6427, 6438, 6488, 6496, 6516, 6520, 6533, 6537, 6562, 6631, 6672, 6674, 6681, 6694, 6697, 6727, 6753, 6760, 6766, 6780, 6790, 6795, 6823, 6837, 6843, 6851, 6864, 6885, 6904, 6908, 6920, 6921, 6923, 6934, 6935, 6945, 6960, 7029, 7045, 7047, 7058, 7093, 7098, 7104, 7110, 7111, 7113, 7122, 7127, 7190, 7194, 7216, 7224, 7237, 7244, 7252, 7265, 7274, 7277, 7278, 7279, 7282, 7290, 7301, 7305, 7310, 7312, 7324, 7327, 7395, 7404, 7414, 7424, 7426, 7454, 7482, 7483, 7499, 7508, 7532, 7537, 7584, 7589, 7623, 7630, 7709, 7718, 7732, 7742, 7745, 7766, 7791, 7793, 7817, 7831, 7832, 7838], 'neck': [0, 2, 606, 697, 712, 714, 1033, 1236, 1596, 1713, 2234, 3223, 5630, 6063, 6288, 6445, 6718, 6809, 6992, 6998, 7081], 'shoulder': [212, 2117, 2280, 3621, 5759, 6809, 7311, 7789, 7846], 'tendon': [236, 352, 705, 773, 1479, 3123, 3434, 4192, 4994, 5160, 5551, 6045, 6397, 6583, 7117, 7163, 7322, 7363, 7410, 7648, 7721], 'waist': [776, 1116, 2151, 2202, 7000, 7018, 7083, 7155, 7617], 'organ': [7194], 'spleen': [1507, 7047], 'left_leg': [2044, 7383], 'nose': [2067], 'tongue': [1599], 'muscle': [419, 697, 848, 1675, 1754, 3102, 3976, 4024, 5601, 6077, 6260, 7300], 'breast': [22, 63, 104, 107, 153, 166, 189, 198, 218, 233, 285, 335, 380, 469, 509, 535, 542, 578, 613, 676, 717, 835, 864, 949, 1025, 1048, 1061, 1090, 1109, 1142, 1222, 1386, 1409, 1443, 1552, 1572, 1604, 1624, 1625, 1664, 1728, 1763, 1827, 1847, 2024, 2171, 2190, 2202, 2272, 2637, 3059, 3298, 3312, 3439, 3573, 3598, 3660, 3719, 3721, 3722, 3723, 3732, 3744, 3814, 3836, 4313, 4462, 4538, 4656, 4694, 4940, 5192, 5643, 5693, 5745, 5776, 5801, 5837, 5841, 5895, 6004, 6044, 6046, 6047, 6100, 6234, 6332, 6374, 6409, 6568, 6655, 6664, 6673, 6714, 6715, 6763, 6773, 6797, 6867, 6929, 6961, 7008, 7010, 7018, 7033, 7094, 7154, 7155, 7156, 7209, 7213, 7375, 7379, 7380, 7391, 7395, 7416, 7438, 7454, 7505, 7508, 7588, 7590, 7604, 7612, 7815, 7822, 7828]}
 
         d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
         d3.selectAll(".pixel").each(function(d){ 
            d3.select(this).on("mouseover",function(){
-               $(this).css("fill","aqua")
-               var labels = $(this).attr("class");
-               labels = labels.replace("pixel","")
-               $("#message").text(labels);
+               var comps = $(this).attr("d").split(" ")
+               comps[8]="8.2728431,8.2728431"               
+               $(this).attr("d",comps.join(" "))
+               var bodyparts = $(this).attr("class").replace("pixel","")
+               $("#message").text(bodyparts)
            })
-        })
+           d3.select(this).on("mouseout",function(){
+               var comps = $(this).attr("d").split(" ")
+               comps[8]="2.2728431,2.2728431" 
+               $(this).attr("d",comps.join(" "))
+
+           })
+           d3.select(this).on("click",function(){
+               var parts = $(this).attr("class").replace("pixel","").split(" ")
+               parts.shift()
+               $.each(parts,function(i,b){
+                   var idx = counts[b]
+                   if(typeof idx != 'undefined'){
+                       idx = "circle#id" + idx.join(", circle#id")
+                       $(idx).attr("style","fill:orange")
+                       $(idx).attr("r",4)
+                   }
+                   // Add a button to the list
+                   var active_parts = $.map($("button"), function( val, i ) {
+                      return $(val).attr("id")
+                   }); 
+                   if ($.inArray(b + "_button",active_parts)==-1){
+                       $("#tags").append('<button class="btn btn-xs" id="' + b + '_button"><i class="fa fa-times"></i> ' + b + '</button>')               
+                   }
+
+                   // On click, we should unselect points and remove button
+                   $("#" + b + "_button").click(function(){
+                       $("."+b).attr("style","fill:white;stroke:none")
+                       $(idx).attr("style","fill:white")
+                       $(idx).attr("r",1)
+                       $(this).remove()
+                   })
+
+               })
+               parts = parts.join(", .").replace("body","")
+               $(parts).attr("style","fill:orange;stroke:none")
+           })
+
+        });
+
+   // Let's make a map!
+   var  width = 1200,
+	height = 800;
+
+   var proj = d3.geo.mercator()
+	        .center([-100, 50])
+		.scale(600)
+		.rotate([-10,0]);
+
+    var path = d3.geo.path()
+		.projection(proj);
+
+    var zoom = d3.behavior.zoom()
+        .translate(proj.translate())
+        .scale(proj.scale())
+        .scaleExtent([height*.33, 4 * height])
+        .on("zoom", zoom);
+
+    var svg = d3.select("#map").append("svg")
+	.attr("width", width)
+	.attr("height", height)
+	.call(zoom);
+
+    function zoom() {
+	proj.translate(d3.event.translate).scale(d3.event.scale);
+	svg.selectAll("path").attr("d", path);
+	circles
+  		.attr("cx", function(d){return proj([d.long, d.lat])[0];})
+		.attr("cy", function(d){return proj([d.long, d.lat])[1];});
+    }
+
+    var borders = svg.append("g");
+    var deaths = svg.append("g");
+    var colorScale = d3.scale.linear().domain([1400, 1800, 1860, 1940, 2015]);
+
+    var tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 1e-6)
+        .style("background", "rgba(250,250,250,.7)");
+
+    //tooltip.append("img")
+	//.attr("id", "tooltipImg")
+	//.attr("height", 100)
+	//.attr("width", 100)
+	//.style("opacity", "1");
+
+    queue()
+	.defer(d3.json, "/static/worldTopo.json")
+	.defer(d3.json, "/static/geopoints.json")
+	.await(ready);
+
+    points = [];
+    function ready(error, topology, geopoints){
+	borders.selectAll("path")
+		.data(topojson.object(topology, topology.objects.countries)
+				.geometries)
+	.enter()
+		.append("path")
+		.attr("d", path)
+		.attr("class", "border")
+	
+	points = [];
+	geopoints.features.forEach(function(d){
+		d.lat = +d.geometry.coordinates[1];
+		d.long = +d.geometry.coordinates[0];
+		d.id = +d.id;
+                points.push(d)
+	});
+	points.sort(function(a, b){return a.id - b.id;})
+
+	colorScale
+		.range(["#FFFF66", "#FFFF00", "#E68000", "#D94000", "#CC0000"]);
+
+	circles = deaths.selectAll("circle")
+		.data(points).enter()
+			.append("svg:a")
+		    	.attr("xlink:href", function(d) { return "#" })
+		    	.attr("xlink:show", "new")
+			.append("circle")
+				.attr("cx", function(d){return proj([d.long, d.lat])[0];})
+				.attr("cy", function(d){return proj([d.long, d.lat])[1];})
+				.attr("r", 1)
+				.attr("id", function(d){return "id" + d.id;})
+				.style("fill", "white")
+		.on("mouseover", function(d){
+			d3.select(this)
+				.attr("stroke", "black")
+				.attr("stroke-width", 1)
+				.attr("fill-opacity", 1);
+
+			tooltip
+			    .style("left", (d3.event.pageX + 5) + "px")
+			    .style("top", (d3.event.pageY - 5) + "px")
+			    .transition().duration(300)
+			    .style("opacity", 1)
+			    .style("display", "block")
+			})
+
+		.on("mouseout", function(d){
+			d3.select(this)
+				.attr("stroke", "")
+				.attr("fill-opacity", function(d){return 1;})
+
+			tooltip.transition().duration(700).style("opacity", 0);
+		});
+
+
+
+	function render(method){
+		d3.select(this).call(method);
+	}
+
+
+	lastFilterArray = [];
+	points.forEach(function(d, i){
+		lastFilterArray[i] = 1;
+	});
+
+
+        
+}
+
+
     });
     </script>
 
