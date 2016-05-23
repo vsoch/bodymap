@@ -1792,8 +1792,8 @@
 	//.style("opacity", "1");
 
     queue()
-	.defer(d3.json, "/static/worldTopo.json")
-	.defer(d3.json, "/static/geopoints.json")
+	.defer(d3.json, "static/worldTopo.json")
+	.defer(d3.json, "static/geopoints.json")
 	.await(ready);
 
     points = [];
