@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 
 {% block head %}
-<script src="/static/js/topojson.js"></script>
-<script src="/static/js/queue.js"></script>
-
+<script src="{{ url_for('static', filename='js/topojson.js') }}"></script>
+<script src="{{ url_for('static', filename='js/queue.js') }}"></script>
+<style>
+.pixel {
+  cursor: pointer;
+}
+</style>
 {% endblock %}
     
 {% block content %}
 <div id="bodyparts" style="position:fixed;top:5px;right:10px;width:100px;height:50px">
-  <h4 id="message">BODYMAP</h4>
+  <h4 id="message" style="color:white">BODYMAP</h4>
 </div>
         <div class="row">
             <div class="col-md-9" id="map">
@@ -21,18 +25,28 @@
 
 {% block scripts %}
     <script type="text/javascript">
-    var deaths = {{ geojson | safe }}
-
     $(document).ready(function() {
         d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
         d3.selectAll(".pixel").each(function(d){ 
            d3.select(this).on("mouseover",function(){
-               $(this).css("fill","orange")
-               var bodyparts = $(this).attr("class")
+               var comps = $(this).attr("d").split(" ")
+               comps[8]="8.2728431,8.2728431"               
+               $(this).attr("d",comps.join(" "))
+               var bodyparts = $(this).attr("class").replace("pixel","")
                $("#message").text(bodyparts)
            })
            d3.select(this).on("mouseout",function(){
-               $(this).css("fill","white")
+               var comps = $(this).attr("d").split(" ")
+               comps[8]="2.2728431,2.2728431" 
+               $(this).attr("d",comps.join(" "))
+
+           })
+           d3.select(this).on("click",function(){
+               var bodyparts = $(this).attr("class").replace("pixel","").split(" ")
+               console.log(bodyparts)
+               bodyparts = bodyparts.join(", .").replace(", .body, ","")
+               console.log(bodyparts)
+               $(bodyparts).attr("style","fill:orange;stroke:none")
            })
         });
 
@@ -41,55 +55,54 @@
 	height = 800;
 
    var proj = d3.geo.mercator()
-	        .center([-30, 50])
-		.scale(180)
+	        .center([-100, 50])
+		.scale(600)
 		.rotate([-10,0]);
 
-var path = d3.geo.path()
+    var path = d3.geo.path()
 		.projection(proj);
 
-var zoom = d3.behavior.zoom()
-    .translate(proj.translate())
-    .scale(proj.scale())
-    .scaleExtent([height*.33, 4 * height])
-    .on("zoom", zoom);
+    var zoom = d3.behavior.zoom()
+        .translate(proj.translate())
+        .scale(proj.scale())
+        .scaleExtent([height*.33, 4 * height])
+        .on("zoom", zoom);
 
+    var svg = d3.select("#map").append("svg")
+	.attr("width", width)
+	.attr("height", height)
+	.call(zoom);
 
-var svg = d3.select("#map").append("svg")
-		.attr("width", width)
-		.attr("height", height)
-		.call(zoom);
-
-function zoom() {
+    function zoom() {
 	proj.translate(d3.event.translate).scale(d3.event.scale);
 	svg.selectAll("path").attr("d", path);
 	circles
   		.attr("cx", function(d){return proj([d.long, d.lat])[0];})
 		.attr("cy", function(d){return proj([d.long, d.lat])[1];});
-}
+    }
 
-var borders = svg.append("g");
-var impacts = svg.append("g");
-var colorScale = d3.scale.linear().domain([1400, 1800, 1860, 1940, 2015]);
+    var borders = svg.append("g");
+    var deaths = svg.append("g");
+    var colorScale = d3.scale.linear().domain([1400, 1800, 1860, 1940, 2015]);
 
-var tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 1e-6)
-    .style("background", "rgba(250,250,250,.7)");
+    var tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 1e-6)
+        .style("background", "rgba(250,250,250,.7)");
 
-tooltip.append("img")
-	.attr("id", "tooltipImg")
-	.attr("height", 200)
-	.attr("width", 200)
-	.style("opacity", "1");
+    //tooltip.append("img")
+	//.attr("id", "tooltipImg")
+	//.attr("height", 100)
+	//.attr("width", 100)
+	//.style("opacity", "1");
 
-queue()
-	.defer(d3.json, "/static/worldTopo.json")
-	.defer(d3.json, "/static/geopoints.json")
+    queue()
+	.defer(d3.json, "{{ url_for('static', filename='worldTopo.json') }}")
+	.defer(d3.json, "{{ url_for('static', filename='geopoints.json') }}")
 	.await(ready);
 
-points = [];
-function ready(error, topology, geopoints){
+    points = [];
+    function ready(error, topology, geopoints){
 	borders.selectAll("path")
 		.data(topojson.object(topology, topology.objects.countries)
 				.geometries)
@@ -98,7 +111,6 @@ function ready(error, topology, geopoints){
 		.attr("d", path)
 		.attr("class", "border")
 	
-
 	points = [];
 	geopoints.features.forEach(function(d){
 		d.lat = +d.geometry.coordinates[1];
@@ -111,7 +123,7 @@ function ready(error, topology, geopoints){
 	colorScale
 		.range(["#FFFF66", "#FFFF00", "#E68000", "#D94000", "#CC0000"]);
 
-	circles = impacts.selectAll("circle")
+	circles = deaths.selectAll("circle")
 		.data(points).enter()
 			.append("svg:a")
 		    	.attr("xlink:href", function(d) { return "#" })
@@ -121,7 +133,7 @@ function ready(error, topology, geopoints){
 				.attr("cy", function(d){return proj([d.long, d.lat])[1];})
 				.attr("r", 2)
 				.attr("id", function(d){return "id" + d.id;})
-				.style("fill", "orange")
+				.style("fill", "white")
 		.on("mouseover", function(d){
 			d3.select(this)
 				.attr("stroke", "black")
@@ -134,8 +146,8 @@ function ready(error, topology, geopoints){
 			    .transition().duration(300)
 			    .style("opacity", 1)
 			    .style("display", "block")
-
 			})
+
 		.on("mouseout", function(d){
 			d3.select(this)
 				.attr("stroke", "")
@@ -157,11 +169,7 @@ function ready(error, topology, geopoints){
 	});
 
 
-	window.reset = function(i){
-		charts[i].filter(null);
-		renderAll();
-	}
-
+        
 }
 
 
