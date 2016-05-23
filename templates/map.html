@@ -34,6 +34,17 @@
                 <script>
                 var po = org.polymaps;
 
+                // Function to load point
+               function load(e) {
+                   for (var i = 0; i < e.features.length; i++) {
+                       var feature = e.features[i];
+                       console.log(feature);
+                       feature.element.appendChild(po.svg("title")
+                           .appendChild(document.createTextNode(feature.data.id))
+                           .parentNode);
+                        }
+                    }
+
                 var map = po.map()
                     .container(document.getElementById("map").appendChild(po.svg("svg")))
                     .add(po.interact())
@@ -44,6 +55,14 @@
                    + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
                    + "/999/256/{Z}/{X}/{Y}.png")
                    .hosts(["a.", "b.", "c.", ""])));
+
+                map.add(po.geoJson()
+                   .url("{{ url_for('static', filename='geopoints.json') }}")
+                   .id("deaths")
+                   .zoom(12)
+                   .tile(false)
+                   .on("load",load) 
+                 );
 
                 map.add(po.compass()
                 .pan("none"));

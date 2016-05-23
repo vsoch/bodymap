@@ -1,10 +1,13 @@
 # Prepare bodymap will parse labels from the FMA 
 # - including terms likely to be found in social media
 
-from svgtools import create_pointilism_svg
+from PyDictionary import PyDictionary # pip install PyDictionary
+from svgtools.generate import create_pointilism_svg
+from svgtools.utils import save_json
 from glob import glob
 from time import sleep
 import pandas
+import json
 import re
 
 # STEP 0: PREPARE BODYMAP ####################################################################
@@ -193,7 +196,6 @@ for mi in not_found:
     print 'fatalities.loc[%s,"LOCATION_RAW"] = "" #' %mi
 
 
-
 fatalities.loc[7680,"LOCATION_RAW"] = "FL 34945" # wrong zip code
 fatalities.loc[7666,"LOCATION_RAW"] = "TX 77351" # nearby town Leggett
 fatalities.loc[7623,"LOCATION_RAW"] = "TN 37868" # wrong zip code
@@ -325,6 +327,8 @@ fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
 # One more round! Want to get these all mapped!
 # This time I will look up the company address
+for mi in not_found:
+    print 'fatalities.loc[%s,"LOCATION_RAW"] = "" #' %mi
 
 fatalities.loc[7479,"LOCATION_RAW"] = "TX 78119" #
 fatalities.loc[6431,"LOCATION_RAW"] = "TX 79772" # nearby town, pecos TX
@@ -376,28 +380,143 @@ while len(not_found) > 0:
             fatalities = add_entry(index,location,fatalities)
             # Save the address that was used
             fatalities.loc[index,"LOCATION_RAW"] = address
+        else:
+            # Next try just zip code - more reliable but also risky if entered wrong
+            address = row.LOCATION_RAW
+            address = address[match.start():match.end()]
+            location = geolocator.geocode(address)
+            sleep(0.5)
+            if location != None:
+                print "FOUND %s" %(address)
+                fatalities = add_entry(index,location,fatalities)
+                # Save the address that was used
+                fatalities.loc[index,"LOCATION_RAW"] = address
     else:
-        print "No match for %s" %(address)
+        print "No match for index %s, %s" %(index,address)
 
-# STEP 4: GEO-JSON ###########################################################################
+fatalities.loc[7749,"LOCATION_RAW"] = "CA 95540"
+fatalities.loc[366,"LOCATION_RAW"] = '91701'
+fatalities.loc[2333,"LOCATION_RAW"] = "05465"
+fatalities.loc[3648,"LOCATION_RAW"] = "97814"
+fatalities.loc[3667,"LOCATION_RAW"] = "45801"
+fatalities.loc[3681,"LOCATION_RAW"] = "96732"
+fatalities.loc[3704,"LOCATION_RAW"] = "WY 82716"
+fatalities.loc[7357,"LOCATION_RAW"] = "FL 34652"
+
+not_found = fatalities.index[fatalities.LATITUDE.isnull()==True].tolist()
+len(not_found)
+# 0
+# beautiful!
+
+# importance of NaN needs to be set to 0
+#fatalities.LOCATION_IMPORTANCE[fatalities.LOCATION_IMPORTANCE.isnull()==True]
+fatalities.LOCATION_IMPORTANCE.fillna(0)
+
+fatalities = normalize_locations(fatalities)
+fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
+
+# STEP 4: BODYPARTS ##########################################################################
+
+# We want to first get every synonym for every body part, then search in text.
+terms = json.load(open("data/simpleFMA.json","r"))
+dictionary=PyDictionary()
+
+# looked at these manually, these are the ones worth adding
+get_synsfor = ["stomach","cartilage","breast","knee","waist","muscle","tendon","calf",
+               "vagina","penis","back","butt","forearm","thigh"]
+
+bodyparts = dict()
+for term,fma in terms.iteritems():
+    syns = ""
+    word = term.replace("_"," ")
+    if term == "index-finger":
+        syns = dictionary.synonym("index-finger")
+    elif term in get_synsfor:
+        syns = dictionary.synonym(term)
+    if syns != "":
+        regexp = "|".join([word] + syns)
+    else:
+        regexp = "|".join([word])
+    bodyparts[term] = regexp
+    
+save_json(bodyparts,"data/bodyparts.json")
+
+# Now let's parse each death for bodyparts
+injuries = pandas.DataFrame(columns=bodyparts.keys())
+
+for row in fatalities.iterrows():
+    index = row[0]
+    text = row[1].DESCRIPTION.replace('\xa0','').replace('\xc2','').replace('\xae','')
+    for term,regexp in bodyparts.iteritems():
+        if re.search(regexp,text):
+            print "Found %s :: %s\n" %(term,text)
+            injuries.loc[index,term] = 1
+
+injuries[injuries.isnull()]=0
+injury_sums = injuries.sum()[injuries.sum()!=0]
+injury_sums.sort_values(inplace=True,ascending=False)
+injuries.to_csv("data/injuries.tsv",sep="\t")
+
+#head        530
+#back        283
+#ear         266
+#calf        150
+#foot        137
+#breast      128
+#limb        110
+#arm          98
+#butt         67
+#liver        66
+#heart        60
+#thigh        48
+#hand         48
+#leg          30
+#body         29
+#stomach      21
+#tendon       21
+#neck         21
+#eye          12
+#muscle       12
+#shoulder      9
+#waist         9
+#trunk         8
+#lung          6
+#ankle         4
+#penis         3
+#knee          3
+#toe           2
+#spleen        2
+#left_leg      2
+#mouth         2
+#finger        2
+#pelvis        1
+#organ         1
+#tongue        1
+#left_arm      1
+#nose          1
+#kidney        1
+
+# STEP 5: GEO-JSON ###########################################################################
 
 # https://pypi.python.org/pypi/geojson/
 
-from geojson import Point, Feature
+from geojson import Point, Feature, FeatureCollection
 
-# STOPPED HERE - haven't done this yet (locations still parsing)
-seen = []
+points = []
 for row in fatalities.iterrows():
     index = row[0]
 
     # Point gets latitude and longitude
     lat = row[1].LATITUDE
     lon = row[1].LONGITUDE
+    
     point = Point((lat,lon))
 
     # Prepare some properties
-    properties = {"altitude":row[1].ALTITUDE,
-                  "importance":row[1].LOCATION_IMPORTANCE
-                  ""}
+    properties = {"importance":row[1].LOCATION_IMPORTANCE}
+                  # http://wiki.openstreetmap.org/wiki/Proposed_Features/Importance 
     feature = Feature(geometry=point,id=index,properties=properties)
+    points.append(feature)
 
+features = FeatureCollection(points)
+save_json(features,"data/geopoints.json")
