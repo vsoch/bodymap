@@ -513,6 +513,15 @@ injuries.to_csv("data/injuries.tsv",sep="\t")
 #nose          1
 #kidney        1
 
+# Finally,let's prepare a version that only holds ids for relevant
+deaths = dict()
+for part in injuries.columns:
+    points = injuries[part][injuries[part]!=0].index.tolist()
+    if len(points) > 0:
+        deaths[str(part)] = points
+
+save_json(deaths,"data/injuries_index.json")
+
 # STEP 5: GEO-JSON ###########################################################################
 
 # https://pypi.python.org/pypi/geojson/

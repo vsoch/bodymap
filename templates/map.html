@@ -7,6 +7,19 @@
 .pixel {
   cursor: pointer;
 }
+
+#tags {
+ position:fixed;
+ bottom:10px;
+ left:0px;
+ z-index:2;
+}
+
+.btn {
+  margin-right:2px;
+  background-color:white;
+  color:black;
+}
 </style>
 {% endblock %}
     
@@ -21,11 +34,19 @@
                 {{ bodymap | safe }}
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-12" id="tags">
+               <!-- buttons for each tag will be appended here-->
+            </div>
+        </div>
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript">
+
     $(document).ready(function() {
+        var counts = {{ deaths | safe }}
+
         d3.selectAll(".pixel").attr("style","fill:white;stroke:none")
         d3.selectAll(".pixel").each(function(d){ 
            d3.select(this).on("mouseover",function(){
@@ -42,12 +63,36 @@
 
            })
            d3.select(this).on("click",function(){
-               var bodyparts = $(this).attr("class").replace("pixel","").split(" ")
-               console.log(bodyparts)
-               bodyparts = bodyparts.join(", .").replace(", .body, ","")
-               console.log(bodyparts)
-               $(bodyparts).attr("style","fill:orange;stroke:none")
+               var parts = $(this).attr("class").replace("pixel","").split(" ")
+               parts.shift()
+               $.each(parts,function(i,b){
+                   var idx = counts[b]
+                   if(typeof idx != 'undefined'){
+                       idx = "circle#id" + idx.join(", circle#id")
+                       $(idx).attr("style","fill:orange")
+                       $(idx).attr("r",4)
+                   }
+                   // Add a button to the list
+                   var active_parts = $.map($("button"), function( val, i ) {
+                      return $(val).attr("id")
+                   }); 
+                   if ($.inArray(b + "_button",active_parts)==-1){
+                       $("#tags").append('<button class="btn btn-xs" id="' + b + '_button"><i class="fa fa-times"></i> ' + b + '</button>')               
+                   }
+
+                   // On click, we should unselect points and remove button
+                   $("#" + b + "_button").click(function(){
+                       $("."+b).attr("style","fill:white;stroke:none")
+                       $(idx).attr("style","fill:white")
+                       $(idx).attr("r",1)
+                       $(this).remove()
+                   })
+
+               })
+               parts = parts.join(", .").replace("body","")
+               $(parts).attr("style","fill:orange;stroke:none")
            })
+
         });
 
    // Let's make a map!
@@ -131,7 +176,7 @@
 			.append("circle")
 				.attr("cx", function(d){return proj([d.long, d.lat])[0];})
 				.attr("cy", function(d){return proj([d.long, d.lat])[1];})
-				.attr("r", 2)
+				.attr("r", 1)
 				.attr("id", function(d){return "id" + d.id;})
 				.style("fill", "white")
 		.on("mouseover", function(d){

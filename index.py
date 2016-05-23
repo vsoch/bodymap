@@ -18,7 +18,9 @@ class BodyMapServer(Flask):
             # load data on start of application
             self.bodymap = "".join(open("data/bodymap.svg","r").readlines())
             self.labels = json.load(open("data/simpleFMA.json","r"))
-          
+            #self.deaths = pandas.read_csv("data/injuries.tsv",sep="\t")
+            self.deaths = json.load(open("data/injuries_index.json","r"))
+
 app = BodyMapServer(__name__)
 
 # Global variables and functions
@@ -66,8 +68,12 @@ def index():
 @app.route("/map")
 def bodymap():
     '''view deaths via bodymap'''
+    deaths = dict()
+    for part,idx in app.deaths.iteritems():
+        deaths[str(part)] = idx
     return render_template("map.html",bodymap=app.bodymap,
-                                      labels=app.labels)
+                                      labels=app.labels,
+                                      deaths=deaths)
 
 @app.route("/summary")
 def summary_view():
