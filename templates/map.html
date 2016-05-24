@@ -8,6 +8,11 @@
   cursor: pointer;
 }
 
+.tooltip {
+  padding:10px;
+  border-radius:4px;
+}
+
 #tags {
  position:fixed;
  bottom:10px;
@@ -43,6 +48,8 @@
 
 {% block scripts %}
     <script type="text/javascript">
+
+    var descriptions = {{ descriptions | safe }}
 
     $(document).ready(function() {
         var counts = {{ deaths | safe }}
@@ -191,6 +198,7 @@
 			    .transition().duration(300)
 			    .style("opacity", 1)
 			    .style("display", "block")
+                            .text(descriptions[d.id])
 			})
 
 		.on("mouseout", function(d){

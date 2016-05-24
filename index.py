@@ -18,8 +18,16 @@ class BodyMapServer(Flask):
             # load data on start of application
             self.bodymap = "".join(open("data/bodymap.svg","r").readlines())
             self.labels = json.load(open("data/simpleFMA.json","r"))
-            #self.deaths = pandas.read_csv("data/injuries.tsv",sep="\t")
             self.deaths = json.load(open("data/injuries_index.json","r"))
+            self.fatalities = pandas.read_csv("data/fatalities_all.tsv",sep="\t",index_col=1)
+            self.fatalities = self.fatalities.drop(["LATITUDE","LONGITUDE","LOCATION_RAW",
+                                                    "LATITUDE_EPSG3857","LONGITUDE_EPSG3857",
+                                                    "LOCATION_IMPORTANCE","ALTITUDE"],axis=1)
+            self.fatalities = self.fatalities.rename(index=str, columns={"Unnamed: 0":"id"})
+            # generate list of descriptions associated with ids
+            self.descriptions = self.fatalities.DESCRIPTION.copy()    
+            self.descriptions.index = self.fatalities.id.tolist()  
+            self.descriptions = self.descriptions.to_dict()      
 
 app = BodyMapServer(__name__)
 
@@ -73,83 +81,8 @@ def bodymap():
         deaths[str(part)] = idx
     return render_template("map.html",bodymap=app.bodymap,
                                       labels=app.labels,
-                                      deaths=deaths)
-
-@app.route("/summary")
-def summary_view():
-    '''summary view (not yet developed) will have summary statistics and global / high level plots
-    '''
-    methods = app.pubs.columns.tolist() 
-    authors = app.authors.index.tolist()
-    return render_template("index.html",methods=methods,
-                                        authors=authors)    
-
-@app.route("/method",methods=['POST','GET'])
-def view_method():
-    '''view_method views a list of publications most strongly associated with a particular method, 
-    and gives the user the option to explore by clicking on an author. If POST data is provided, 
-    the method is retrieved from the POST, otherwise a random method is selected
-    '''
-    methods = app.pubs.columns.tolist() 
-    authors = app.authors.index.tolist()
-
-    if request.method == "POST":
-        method = request.form["method"]
-    else:
-        method = choice(methods)
-
-    print "Method is %s" %(method)
- 
-    # Get publications and meta data for most highly matched papers
-    ranked_papers = app.pubs[method].copy()
-    ranked_papers.sort(inplace=True,ascending=False)
-    ranked_papers = ranked_papers[ranked_papers>0]
-    pub_ids = ranked_papers[ranked_papers>0].index.tolist()
-    pub_meta, publications = get_publications(pub_ids,return_dict=False)
-    pub_meta["score"] = ranked_papers.loc[pub_meta.index.tolist()]
-    pub_meta = parse_unicode(pub_meta.to_dict(orient="records"))
-
-    return render_template("method.html",methods=methods,
-                                        authors=authors,
-                                        themethod=method,
-                                        pubs_meta=pub_meta,
-                                        publications=publications,
-                                        ranked_papers=ranked_papers.to_dict())
-
-@app.route("/author",methods=['POST','GET'])
-def view_author():
-    '''view_author views a list of abstracts and associated meta data, and a table of method scores 
-    for a particular author. If POST data is provided, the author is retrieved from the POST, 
-    otherwise a random author is selected
-    '''
-    methods = app.pubs.columns.tolist() 
-    authors = app.authors.index.tolist()
-
-    # Retrieve author selection, or select randomly
-    if request.method == "POST":
-        author = request.form["author"]
-    else:
-        author = choice(authors)
-    
-    print "Author is %s" %(author)
-
-    # Prepare meta data about papers
-    pub_ids = app.authors.loc[author][app.authors.loc[author]!=0].index.tolist()
-    pub_meta, publications = get_publications(pub_ids)
-
-    # What methods does the author most strongly match to?
-    ranked_methods = publications.mean()
-    ranked_methods.sort_values(inplace=True,ascending=False)
-    ranked_methods = ranked_methods[ranked_methods.isnull()==False]
-    ranked_methods = ranked_methods.to_dict()
-
-    return render_template("author.html",methods=methods,
-                                         author=author,
-                                         authors=authors,
-                                         ranked_methods=ranked_methods,
-                                         pubs_meta=pub_meta,
-                                         publications=publications.to_dict(orient="records"))
-
+                                      deaths=deaths,
+                                      descriptions=app.descriptions)
 
 if __name__ == "__main__":
     app.debug = True
