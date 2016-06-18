@@ -3,6 +3,9 @@
 {% block head %}
 <script src="{{ url_for('static', filename='js/topojson.js') }}"></script>
 <script src="{{ url_for('static', filename='js/queue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jQDateRangeSlider-min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/iThing-min.css') }}" type="text/css" />
 <style>
 .pixel {
   cursor: pointer;
@@ -20,10 +23,17 @@
  z-index:2;
 }
 
+.ui-rangeSlider-bar {
+ background: orange !important;
+}
+
 #timeline {
   position: fixed;
-  bottom:20px;
+  bottom:30px;
+  left:30px;
   z-index:100;
+  min-width:900px;
+  min-height:50px;
 }
 
 .extent {
@@ -75,11 +85,18 @@
             </div>
         </div>
         <div id="timeline">
+            <div id="slider"></div>
         </div>
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript">
+
+   $("#slider").dateRangeSlider({
+    bounds:{
+       min: new Date(2010,01,01),
+       max: new Date(2015,9,9)
+    }});
 
     var descriptions = {{ descriptions | safe }}
 
@@ -186,6 +203,7 @@
 	.await(ready);
 
     points = [];
+
     function ready(error, topology, geopoints){
 	borders.selectAll("path")
 		.data(topojson.object(topology, topology.objects.countries)
@@ -244,132 +262,52 @@
 
 
 	function render(method){
-		d3.select(this).call(method);
+            d3.select(this).call(method);
 	}
 
 
 	lastFilterArray = [];
 	points.forEach(function(d, i){
-		lastFilterArray[i] = 1;
+	    lastFilterArray[i] = 1;
 	});
-        
+       
+       // When the user moves the slider, update data to fall within range
+       $("#slider").bind("valuesChanged", function(e, data){
+          start_date = data.values.min
+          end_date = data.values.max
 
+          // Dates do not appear to be accurate by the day
+          end_day = end_date.getDay() + 1;
+          end_month = end_date.getMonth() + 1;
+          end_year = end_date.getFullYear();
+          end_date = end_month + "/" + end_day + "/" + end_year
 
-        // Date slider
-        formatDate = d3.time.format("%b %Y");
+          start_day = start_date.getDay() + 1;
+          start_month = start_date.getMonth() + 1;
+          start_year = start_date.getFullYear();
 
-        // scale function
-        var timeScale = d3.time.scale()
-        .domain([new Date('{{ start_date }}'),new Date('{{ end_date }}')])
-        .range([0, width])
-        .clamp(true);
+          start_date = start_month + "/" + start_day + "/" + start_year
 
-        // initial value
-        var startingValue = new Date('3/20/2010');
-        var endValue = timeScale(new Date('5/20/2012'));
-        var sliderHeight = 50;
+          var url = "/api/dates/" + start_date + "/" + end_date
 
-        // defines brush
-        var margin = {top: 5, right: 20, bottom: 30, left: 40}
-        var brush = d3.svg.brush()
-            .x(timeScale)
-            .extent([startingValue, endValue])
-                .on("brush", brushed)
+          // Retrieve point list
+          $.ajax({
+              type: "GET",
+              url: url,
+              // if this were not local, would want csrftoken here under data
+              complete: function (data, error){
+                   $("circle").attr("style","fill:white;r:1")
+                   $("circle").removeClass("dateselected");
+                   var results = JSON.parse(data.responseText);
+                   idx = "circle#id" + results["ids"].join(", circle#id")
+                   $(idx).attr("style","fill:orange")
+                   $(idx).addClass("dateselected");
+                   $(idx).attr("r",4)
+              },
+                  dataType: 'html',
+              });
 
-        var svgd = d3.select("#timeline").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", sliderHeight + 50 + margin.top + margin.bottom)
-            .append("g")
-            // classic transform to position g
-           .attr("transform", "translate(" + margin.left + "," + sliderHeight + ")");
-
-        svgd.append("defs").append("clipPath")
-            .attr("id", "clip")
-            .append("rect")
-            .attr("width", width)
-            .attr("height", sliderHeight);
-
-        svgd.append("g")
-            .attr("class", "x axis")
-            // put in middle of screen
-            .attr("transform", "translate(-10," + sliderHeight + ")")
-
-           // inroduce axis
-          .call(d3.svg.axis()
-              .scale(timeScale)
-              .orient("bottom")
-              .tickFormat(function(d) {
-                  return formatDate(d);
-               })
-           .tickSize(0)
-           .tickPadding(12)
-           .tickValues([timeScale.domain()[0], timeScale.domain()[1]]))
-           .select(".domain")
-           .select(function() {
-               console.log(this);
-               return this.parentNode.appendChild(this.cloneNode(true));
-            })
-           .attr("class", "halo");
-
-           var slider = svgd.append("g")
-               .attr("class", "slider context")
-               .call(brush)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", sliderHeight + 7);
-
-           slider.select(".background")
-               .attr("height", sliderHeight);
-
-           var handle = slider.append("g")
-               .attr("class", "handle")
-
-           handle.append("path")
-               .attr("transform", "translate(0," + sliderHeight + ")")
-               .attr("d", "M 0 -20 V 20")
-
-           handle.append('text')
-              .text(startingValue)
-              .attr("transform", "translate(" + (-18) + " ," + (sliderHeight - 25) + ")");
-
-           slider
-               .call(brush.event)
-
-           function brushed() {
-               var value = brush.extent()[0];
-               if (d3.event.sourceEvent) { // not a programmatic event
-                    value = timeScale.invert(d3.mouse(this)[0]);
-               }
-
-               // Update the date to include these dates
-               var start_date = brush.extent()[0].getFullYear()
-               var end_date = brush.extent()[1].getFullYear()
-               var url = "/api/dates/" + start_date + "/" + end_date
-               console.log(url)
-
-               // Retrieve date list via ajax call
-               $.ajax({
-                   type: "GET",
-                   url: url,
-                   // if this were not local, would want csrftoken here under data
-                   complete: function (data, error){
-                       var results = JSON.parse(data.responseText);
-                       console.log(results);
-                       $.each(results,function(i,e){
-                             //console.log(e)
-                       });
-                    },
-                       dataType: 'html',
-                   });
-
-                   timeScale.domain(brush.empty() ? timeScale.domain() : brush.extent());
-                   handle.select('text').text(formatDate(value));
-                   handle.attr("transform", "translate(" + timeScale(value) + ",0)");
-                 }
- 
-                 // Make the slider look nice
-                 d3.select('.extent')
-                     .style('opacity','0.125')
+       });
 
     }// end function ready
 
