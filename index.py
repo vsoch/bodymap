@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 from flask_restful import Resource, Api
 from random import choice
 import itertools
-import scipy
 import random
 import numpy
 import json
