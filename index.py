@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_restful import Resource, Api
 from random import choice
 import itertools
+import scipy
 import random
 import numpy
 import json
@@ -64,13 +65,24 @@ class apiQueryDates(Resource):
         subset = app.fatalities[app.fatalities.INCIDENT_DATETIME >= start_date]
         subset = subset[subset.INCIDENT_DATETIME <= end_date]
 
-        # Also return wordcounts
-        # TODO: we probably want to find words that are different from some baseline
-        words = app.wordcounts.loc[subset.index].sum()
-        words = words[words>0].sort_values(ascending=False)
+        # Also return wordcounts, sorted list of words with rates most different 
+        # from population baseline. Ideal here would be KL divergence, but too slow
+        sample = app.wordcounts.loc[subset.index]
+
+        # Only assess those terms that have changed
+        sample_rates = sample.sum() / sample.shape[1]
+        population_rates = app.wordcounts.sum() / app.wordcounts.shape[1]
+        difference = sample_rates - population_rates
+        difference = difference.abs()
+        difference.sort_values(ascending=False,inplace=True)
+
+        # Return those 1 std over mean (of those that have changed)
+        difference=difference[difference!=0]
+        thresh = difference.mean() + difference.std()
+        difference = difference[difference>thresh]       
 
         return {"ids": subset.id.tolist(),
-                "words":zip(words.index[0:60],words.values[0:60])}
+                "words":difference.index.tolist()}
               
 # Add all resources
 api.add_resource(apiIndex,'/api/deaths') # start month, day, year / end month, date, year
@@ -106,6 +118,26 @@ def random_colors(concepts):
         r = lambda: random.randint(0,255)
         colors[concept] = '#%02X%02X%02X' % (r(),r(),r())
     return colors
+
+
+def kl_diverence(s):
+    '''kullback leibler divergence - too slow to implement but ideally
+    what we would want to assess differences in rates of words between
+    sample and population. S is a particular column of the data frame
+    (a single word). Run eg: res=sample.apply(calculate,axis=0) 
+    '''
+    sample_count = scipy.stats.itemfreq(s.tolist())
+    col = pandas.DataFrame(s).columns[0]
+    population_count = scipy.stats.itemfreq(app.wordcounts[col].tolist())
+    if len(population_count[:,0]) >= len(sample_count[:,0]):
+        difference = len(population_count[:,0]) - len(sample_count[:,0])
+        pk1 = population_count[:,1].tolist()
+        pk2 = sample_count[:,1].tolist() + [0]*difference
+    else:
+        difference = len(sample_count[:,0]) - len(population_count[:,0])
+        pk1 = population_count[:,1].tolist() + [0]*difference
+        pk2 = sample_count[:,1].tolist()
+    return scipy.stats.entropy(pk2, pk1, base=None)
 
 
 # Views ##############################################################################################

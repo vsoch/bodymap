@@ -323,7 +323,7 @@
                    $("#words").text("")
                    $.each(results["words"],function(i,e){
                        console.log(e)
-                       $("#words").append('<button class="btn btn-xs" style="background-color:black;color:white;margin:2px;">' + e[0] + ' (' + e[1] + ') </button>')               
+                       $("#words").append('<button class="btn btn-xs" style="background-color:black;color:white;margin:2px;">' + e + '</button>')               
                    })             
               },
                   dataType: 'html',
