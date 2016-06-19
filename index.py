@@ -32,6 +32,7 @@ class BodyMapServer(Flask):
 
             # This takes a bit of computation and should be run at startup
             self.fatalities['INCIDENT_DATETIME'] = pandas.to_datetime(self.fatalities["INCIDENT_DATE"])
+            self.wordcounts = pandas.read_csv("data/wordcounts.tsv",sep="\t",index_col=0)
 
             # generate list of descriptions associated with ids
             self.descriptions = self.fatalities.DESCRIPTION.copy()    
@@ -62,7 +63,14 @@ class apiQueryDates(Resource):
         end_date = pandas.to_datetime("%s/%s/%s" %(em,ed,ey))
         subset = app.fatalities[app.fatalities.INCIDENT_DATETIME >= start_date]
         subset = subset[subset.INCIDENT_DATETIME <= end_date]
-        return {"ids": subset.id.tolist()}
+
+        # Also return wordcounts
+        # TODO: we probably want to find words that are different from some baseline
+        words = app.wordcounts.loc[subset.index].sum()
+        words = words[words>0].sort_values(ascending=False)
+
+        return {"ids": subset.id.tolist(),
+                "words":zip(words.index[0:60],words.values[0:60])}
               
 # Add all resources
 api.add_resource(apiIndex,'/api/deaths') # start month, day, year / end month, date, year

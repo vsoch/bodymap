@@ -4,6 +4,7 @@
 from PyDictionary import PyDictionary # pip install PyDictionary
 from svgtools.generate import create_pointilism_svg
 from svgtools.utils import save_json
+from nlp import processText # nlp module from wordfish
 from glob import glob
 from time import sleep
 import pandas
@@ -432,7 +433,27 @@ fatalities["LONGITUDE_EPSG3857"] = longs
 fatalities = normalize_locations(fatalities)
 fatalities.to_csv("data/fatalities_all.tsv",sep="\t")
 
-# STEP 4: BODYPARTS ##########################################################################
+# STEP 4: WORDCOUNTS #########################################################################
+# Let's make a matrix of words by ids to quickly generate counts, we will use wordfish
+
+# First let's get unique words
+unique_words = []
+for description in fatalities.DESCRIPTION.tolist():
+    words = processText(description)
+    [unique_words.append(x) for x in words if x not in unique_words]    
+print "Found %s unique words" %(len(unique_words))
+
+wordcounts = pandas.DataFrame(0,index=fatalities.index,columns=unique_words)
+for row in fatalities.iterrows():
+    description = row[1].DESCRIPTION
+    words = processText(description)
+    # This could be made more efficient, but only done once
+    for word in words:
+        wordcounts.loc[row[0],word] = wordcounts.loc[row[0],word] + 1
+
+wordcounts.to_csv("../data/wordcounts.tsv",sep="\t")
+
+# STEP 5: BODYPARTS ##########################################################################
 
 # We want to first get every synonym for every body part, then search in text.
 terms = json.load(open("data/simpleFMA.json","r"))
@@ -522,7 +543,7 @@ for part in injuries.columns:
 
 save_json(deaths,"data/injuries_index.json")
 
-# STEP 5: GEO-JSON ###########################################################################
+# STEP 6: GEO-JSON ###########################################################################
 
 # https://pypi.python.org/pypi/geojson/
 
