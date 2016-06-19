@@ -2,9 +2,9 @@
 
 [annotation interface](http://vsoch.github.io/bodymap/)
 
-This project will develop an interactive body map for use with various data visualizations. Generation of svg images and annotation interface courtesy of [svgtools](http://www.github.com/vsoch/svgtools)
-
 **under development!**
+
+This project will develop an interactive body map for use with various data visualizations. Generation of svg images and annotation interface courtesy of [svgtools](http://www.github.com/vsoch/svgtools)
 
 Currently, the application displays all US Labor fatality records between the years 2010 and 2015 on a map, and the user can select records by date with an interactive slider, or by clicking on a body part. When selecting by date, the most relevant (indicated by count) word tags appear to the left.
 
